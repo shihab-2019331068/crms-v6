@@ -1,0 +1,70 @@
+### Get User Details from Token
+GET http://localhost:3001/api/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiYWxpY2VAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDg0MjY1NDUsImV4cCI6MTc0ODQzMDE0NX0.pleKmvXFfFeAminmLhlys2Gicxoi5xhpOJgWLPyDvws
+
+
+### Signup (Super Admin)
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Super Admin Example",
+  "email": "superadmin@example.com",
+  "password": "password123",
+  "role": "super_admin"
+}
+
+### Login (Super Admin)
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "sa1@example.com",
+  "password": "pass123"
+}
+
+
+### Super Admin Dashboard
+GET http://localhost:3001/api/dashboard/super-admin
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImVtYWlsIjoic3VwZXJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc0ODQzNjY3NywiZXhwIjoxNzQ4NDQwMjc3fQ.lz6K2_PKbBBJcJsWRE1ejyVHuhPXLCGycizWxX21LZA
+
+
+### Add Department (Super Admin)
+POST http://localhost:3001/api/dashboard/super-admin/department
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJlbWFpbCI6InN1cGVyYWRtaW4yQGV4YW1wbGUuY29tIiwicm9sZSI6InN1cGVyX2FkbWluIiwiaWF0IjoxNzQ4ODk1NTE0LCJleHAiOjE3NDg4OTkxMTR9.5aUxMKf1hg4go-CFyQiixCNRcXU7E_kp1K08SsKhvBI
+
+{
+  "name": "Computer Science"
+}
+
+### Add Room (Super Admin)
+POST http://localhost:3001/api/dashboard/super-admin/room
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyLCJlbWFpbCI6InN1cGVyYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NDg3NjUxNTUsImV4cCI6MTc0ODc2ODc1NX0.2dKDYE4Sr3DVHS1u_N21qbTXht89oHURTca9RfqzlJQ
+
+{
+  "roomNumber": "Gallery2",
+  "capacity": 100,
+  "status": "AVAILABLE",
+  "departmentId": 2
+}
+
+
+### Get All Departments
+GET http://localhost:3001/api/departments
+
+
+### Delete Department (Super Admin)
+DELETE http://localhost:3001/api/dashboard/super-admin/department/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJlbWFpbCI6InN1cGVyYWRtaW4yQGV4YW1wbGUuY29tIiwicm9sZSI6InN1cGVyX2FkbWluIiwiaWF0IjoxNzQ4ODk1NTE0LCJleHAiOjE3NDg4OTkxMTR9.5aUxMKf1hg4go-CFyQiixCNRcXU7E_kp1K08SsKhvBI
+
+
+### Get All Users (Super Admin)
+GET http://localhost:3001/api/dashboard/super-admin/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic2ExQGV4YW1wbGUuY29tIiwicm9sZSI6InN1cGVyX2FkbWluIiwiaWF0IjoxNzQ5NzM0MTE2LCJleHAiOjE3NDk3Mzc3MTZ9.AULruDo157tH-ZcsdkYKM-VWpj1q6vF6Yi07R5RGLkA
+
+### Delete User (Super Admin)
+DELETE http://localhost:3001/api/dashboard/super-admin/user/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic2ExQGV4YW1wbGUuY29tIiwicm9sZSI6InN1cGVyX2FkbWluIiwiaWF0IjoxNzQ5NzM0MTE2LCJleHAiOjE3NDk3Mzc3MTZ9.AULruDo157tH-ZcsdkYKM-VWpj1q6vF6Yi07R5RGLkA
+

@@ -1,0 +1,109 @@
+### Signup
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Alice Example",
+  "email": "alice@example.com",
+  "password": "password123",
+  "role": "teacher",
+  "department": "Computer Engineering"
+}
+
+### Login
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "password123"
+}
+
+
+### Signup (Student)
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Student Example",
+  "email": "student@example.com",
+  "password": "password123",
+  "role": "student",
+  "department": "Computer Engineering",
+  "session": "2025-2026"
+}
+
+### Login (Student)
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "password123"
+}
+
+### Signup (Teacher)
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Teacher Example",
+  "email": "teacher@example.com",
+  "password": "password123",
+  "role": "teacher",
+  "department": "Computer Engineering"
+}
+
+### Login (Teacher)
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "teacher@example.com",
+  "password": "password123"
+}
+
+### Signup (Department Admin)
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Dept Admin Example EEE",
+  "email": "deptadmineee@example.com",
+  "password": "password123",
+  "role": "department_admin",
+  "department": "Electrical Engineering"
+}
+
+### Login (Department Admin)
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "deptadmineee@example.com",
+  "password": "password123"
+}
+
+### Signup (Super Admin)
+POST http://localhost:3001/api/signup
+Content-Type: application/json
+
+{
+  "name": "Super Admin Example",
+  "email": "superadmin@example.com",
+  "password": "password123",
+  "role": "super_admin"
+}
+
+### Login (Super Admin)
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "password123"
+}
+
+### Test Backend Connection
+GET http://localhost:3001/api/test
+

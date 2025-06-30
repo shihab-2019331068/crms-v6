@@ -1,0 +1,37 @@
+### Get User Details from Token
+GET http://localhost:3000/api/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiYWxpY2VAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDg0MjY1NDUsImV4cCI6MTc0ODQzMDE0NX0.pleKmvXFfFeAminmLhlys2Gicxoi5xhpOJgWLPyDvws
+
+
+### Signup (Teacher)
+POST http://localhost:3000/api/signup
+Content-Type: application/json
+
+{
+  "name": "Teacher Example",
+  "email": "teacher@example.com",
+  "password": "password123",
+  "role": "teacher",
+  "department": "Computer Engineering"
+}
+
+### Login (Teacher)
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+  "email": "teacher@example.com",
+  "password": "password123"
+}
+
+
+### Teacher Dashboard
+GET http://localhost:3000/api/dashboard/teacher
+Authorization: Bearer <PASTE_TEACHER_JWT_HERE>
+
+
+### Get User Details from Token
+GET http://localhost:3000/api/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiYWxpY2VAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDg0MjY1NDUsImV4cCI6MTc0ODQzMDE0NX0.pleKmvXFfFeAminmLhlys2Gicxoi5xhpOJgWLPyDvws
+
+

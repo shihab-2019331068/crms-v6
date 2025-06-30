@@ -1,0 +1,13 @@
+### Test: Get all rooms
+GET http://localhost:3001/api/rooms
+Content-Type: application/json
+
+### Test: Get all departments
+GET http://localhost:3001/api/departments
+Content-Type: application/json
+
+### Test: Get user by email
+GET http://localhost:3001/api/user/deptadmineee@example.com
+Content-Type: application/json
+
+

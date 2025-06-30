@@ -1,0 +1,210 @@
+// This is your Prisma schema file
+// Learn more at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int          @id @default(autoincrement())
+  name             String
+  email            String       @unique
+  passwordHash     String       @map("password_hash")
+  role             String
+  createdAt        DateTime     @default(now()) @map("created_at")
+  department       Department?  @relation("UserDepartment", fields: [departmentId], references: [id])
+  departmentId     Int?
+  coursesTaught    Course[]     @relation("TeacherCourses")
+  schedules        Schedule[]   @relation("TeacherSchedules")
+  weeklySchedules  WeeklySchedule[] @relation("TeacherWeeklySchedules")
+  enrollments      Enrollment[]
+  logs             Log[]
+  semesterTeachers SemesterTeacher[]
+  session          String?      // Optional, but required if role is STUDENT (enforce in app logic)
+
+  @@map("users")
+}
+
+model Department {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  acronym   String      @unique // Short name, e.g., CSE for Computer Science and Engineering
+  users     User[]      @relation("UserDepartment")
+  courses   Course[]
+  rooms     Room[]
+  labs      Lab[]
+  semesters Semester[]
+  weeklySchedules WeeklySchedule[]
+}
+
+model Course {
+  id           Int          @id @default(autoincrement())
+  name         String
+  code         String
+  credits      Float
+  department   Department   @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  teacher      User?        @relation("TeacherCourses", fields: [teacherId], references: [id])
+  teacherId    Int?
+  schedules    Schedule[]
+  enrollments  Enrollment[]
+  semester     Semester?    @relation(fields: [semesterId], references: [id])
+  semesterId   Int?
+  weeklySchedules WeeklySchedule[]
+  type         CourseType?
+  isMajor      Boolean      @default(true)
+  forDept      Int          
+}
+
+model Lab {
+  id           Int        @id @default(autoincrement())
+  name         String
+  labNumber    String     @unique
+  capacity     Int
+  status       RoomStatus @default(AVAILABLE)
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  semesters    Semester[] @relation("SemesterLabs")
+  weeklySchedules WeeklySchedule[]
+}
+
+model Room {
+  id           Int        @id @default(autoincrement())
+  roomNumber   String     @unique
+  capacity     Int
+  status       RoomStatus @default(AVAILABLE)
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  schedules    Schedule[]
+  semesters    Semester[] @relation("SemesterRooms")
+  weeklySchedules WeeklySchedule[]
+}
+
+model Semester {
+  id             Int         @id @default(autoincrement())
+  name           String      // e.g., "3rd year 2nd semester", "1st year 1st semester"
+  shortname      String?     // e.g., "3-2", "1-1"
+  session        String?     // e.g., "2019-2020" (now optional)
+  startDate      DateTime?
+  endDate        DateTime?
+  examStartDate  DateTime?
+  examEndDate    DateTime?
+  department     Department  @relation(fields: [departmentId], references: [id])
+  departmentId   Int
+  courses        Course[]    // one-to-many with Course
+  labs           Lab[]       @relation("SemesterLabs")
+  rooms          Room[]      @relation("SemesterRooms")
+  teachers       SemesterTeacher[]
+  weeklySchedules WeeklySchedule[]
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  @@unique([name, session, departmentId])
+  @@map("semesters")
+}
+
+model SemesterTeacher {
+  id         Int      @id @default(autoincrement())
+  semester   Semester @relation(fields: [semesterId], references: [id])
+  semesterId Int
+  teacher    User     @relation(fields: [teacherId], references: [id])
+  teacherId  Int
+
+  @@unique([semesterId, teacherId])
+  @@map("semester_teachers")
+}
+
+model WeeklySchedule {
+  id         Int       @id @default(autoincrement())
+  semester   Semester  @relation(fields: [semesterId], references: [id])
+  semesterId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  dayOfWeek  DayOfWeek
+  startTime  String    // e.g., "08:00"
+  endTime    String    // e.g., "09:00"
+  course     Course?   @relation(fields: [courseId], references: [id])
+  courseId   Int?
+  lab        Lab?      @relation(fields: [labId], references: [id])
+  labId      Int?
+  room       Room?     @relation(fields: [roomId], references: [id])
+  roomId     Int?
+  teacher    User?     @relation("TeacherWeeklySchedules", fields: [teacherId], references: [id])
+  teacherId  Int?
+  isBreak    Boolean   @default(false)
+  breakName  String?   // e.g., "Lunch Break", "Tea Break"
+
+  @@unique([semesterId, dayOfWeek, startTime])
+  @@map("weekly_schedules")
+}
+
+model Schedule {
+  id        Int         @id @default(autoincrement())
+  course    Course      @relation(fields: [courseId], references: [id])
+  courseId  Int
+  teacher   User        @relation("TeacherSchedules", fields: [teacherId], references: [id])
+  teacherId Int
+  room      Room        @relation(fields: [roomId], references: [id])
+  roomId    Int
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    ClassStatus
+}
+
+model Enrollment {
+  id             Int      @id @default(autoincrement())
+  student        User     @relation(fields: [studentId], references: [id])
+  studentId      Int
+  course         Course   @relation(fields: [courseId], references: [id])
+  courseId       Int
+  enrollmentDate DateTime @default(now())
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  action    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  timestamp DateTime @default(now())
+  details   String?
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  DEPARTMENT_ADMIN
+  SUPER_ADMIN
+}
+
+enum RoomStatus {
+  AVAILABLE
+  BOOKED
+}
+
+enum ClassStatus {
+  SCHEDULED
+  CANCELED
+}
+
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+enum CourseType {
+  THEORY
+  LAB
+  PROJECT
+  THESIS
+}
