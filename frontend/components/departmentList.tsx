@@ -10,7 +10,12 @@ export interface Department {
 }
 
 
-export default function DepartmentList() {
+interface DepartmentListProps {
+  sidebarOpen?: boolean
+}
+
+
+export default function DepartmentList({ sidebarOpen = true }: DepartmentListProps) {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +135,9 @@ export default function DepartmentList() {
   }
 
   return (
-    <div>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${
+        sidebarOpen ? "w-300" : "w-348"
+      }`}>
       <h2 className="text-2xl font-bold mb-4">Department List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {/* Add Department Button */}
@@ -201,13 +208,13 @@ export default function DepartmentList() {
               <td className="py-2 px-4">
                 <button
                   onClick={() => handleDeleteDepartment(dept.id)}
-                  className="text-white px-1 rounded btn-sm cursor-pointer custom-bordered-btn"
+                  className="text-black px-1 rounded btn-sm cursor-pointer custom-bordered-btn"
                 >
                   Delete
                 </button>
                 <button
                   onClick={() => setManageDeptId(dept.id)}
-                  className="text-white px-1 rounded btn-sm cursor-pointer custom-bordered-btn"
+                  className="text-black px-1 rounded btn-sm cursor-pointer custom-bordered-btn"
                 >
                   Manage
                 </button>

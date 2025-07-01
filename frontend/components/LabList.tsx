@@ -13,14 +13,13 @@ export interface Lab {
   capacity: number;
   status: string;
   departmentAcronym: string | null;
-  departmentId: number; // Added to fix property access error
 }
 
 interface LabListProps {
-  departmentId?: number;
+  sidebarOpen?: boolean
 }
 
-export default function LabList({ departmentId }:LabListProps) {
+export default function LabList({ sidebarOpen = true }: LabListProps) {
   const { user } = useAuth();
   const [labs, setLabs] = useState<Lab[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,9 +50,6 @@ export default function LabList({ departmentId }:LabListProps) {
     setError(null);
     try {
       const response = await api.get<Lab[]>("/labs", { withCredentials: true });
-      if (departmentId) {
-        return response.data.filter(lab => lab.departmentId === departmentId);
-      }
       return response.data;
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -145,7 +141,7 @@ export default function LabList({ departmentId }:LabListProps) {
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
       <h2 className="text-2xl font-bold mb-4">Lab List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {user?.role === "super_admin" && (

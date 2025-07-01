@@ -17,9 +17,10 @@ export interface Room {
 
 interface RoomListProps {
   departmentId?: number;
+  sidebarOpen?: boolean;
 }
 
-export default function RoomList({ departmentId }: RoomListProps) {
+export default function RoomList({ departmentId, sidebarOpen = true }: RoomListProps) {
   const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,7 +142,7 @@ export default function RoomList({ departmentId }: RoomListProps) {
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
       <h2 className="text-2xl font-bold mb-4">Room List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {user?.role === "super_admin" && (
@@ -193,7 +194,7 @@ export default function RoomList({ departmentId }: RoomListProps) {
           {loading ? "Adding..." : "Add Room"}
         </button>
       </form>)}
-      <table className="border" style={{ width: tableWidth }}>
+      <table className={`${ sidebarOpen ? "w-284" : "w-332" }`}>
         <thead>
           <tr>
             <th className="py-2 px-4 border-b">Room Number</th>

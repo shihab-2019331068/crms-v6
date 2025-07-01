@@ -1,74 +1,61 @@
 "use client";
 import { useState } from "react";
-
+import { FaBuilding, FaDoorOpen, FaUser, FaFlask, FaChevronLeft, FaChevronRight, FaSignOutAlt } from "react-icons/fa";
 
 import DepartmentList from "@/components/departmentList";
+import SlidingPage from "@/components/slidingPage";
 import RoomList from "@/components/RoomList";
 import LabList from "@/components/LabList";
 import UserList from "@/components/userList";
+import SideBar from "@/components/sideBar";
 
 export default function SuperAdminDashboard() {
   const [loading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeForm, setActiveForm] = useState(""); // Track active form or list
+  const [activeForm, setActiveForm] = useState("showSlidingPage"); // Track active form or list
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       {/* Sidebar */}
-      {sidebarOpen && (
-        <aside className="w-64 h-screen flex-shrink-0 flex flex-col justify-between sidebar-dark shadow-lg p-4 sticky top-0">
-          {/* Top Section */}
-          <div className="space-y-4">
-            <button className="btn btn-outline btn-sm w-full cursor-pointer custom-bordered-btn" onClick={() => { setActiveForm("showDepartments"); setError(""); setSuccess(""); }} disabled={loading}>Show All Departments</button>
-            <button className="btn btn-outline btn-sm w-full cursor-pointer custom-bordered-btn" onClick={() => { setActiveForm("showRooms"); setError(""); setSuccess(""); }} disabled={loading}>Show All Rooms</button>
-            <button className="btn btn-outline btn-sm w-full cursor-pointer custom-bordered-btn" onClick={() => { setActiveForm("showUsers"); setError(""); setSuccess(""); }} disabled={loading}>Show All Users</button>
-            <button className="btn btn-outline btn-sm w-full cursor-pointer custom-bordered-btn" onClick={() => { setActiveForm("showLabs"); setError(""); setSuccess(""); }} disabled={loading}>Show All Labs</button>
-          </div>
-          {/* Bottom Section */}
-          <div>
-            <button
-              className="btn btn-error btn-sm w-full cursor-pointer custom-bordered-btn"
-              onClick={() => {
-                window.location.href = '/login';
-              }}
-            >
-              Logout
-            </button>
-          </div>
-        </aside>
-      )}
+      <SideBar
+        activeForm={activeForm}
+        setActiveForm={setActiveForm}
+        loading={loading}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        setError={setError}
+        setSuccess={setSuccess}
+      />
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col p-4 ${sidebarOpen ? 'ml-0' : 'ml-0'}`} style={{ minWidth: '1500px' }}>
-        <button
-          className="btn btn-outline btn-sm w-32 cursor-pointer custom-bordered-btn mb-4"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-        </button>
-        <h1 className="text-2xl font-bold mb-6">Welcome to SUST-CRMS, Mr. Super Admin</h1>
+      <div className="flex-1 flex flex-col p-4" style={{ minWidth: '1500px' }}>
         <div className="w-full space-y-8">
           {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
           {success && activeForm && <div className="text-green-600 text-center">{success}</div>}
+          {activeForm === "showSlidingPage" && (
+            <div className="mt-6">
+              <SlidingPage sidebarOpen={sidebarOpen} />
+            </div>
+          )}
           {activeForm === "showDepartments" && (
             <div className="mt-6">
-              <DepartmentList />
+              <DepartmentList sidebarOpen={sidebarOpen} />
             </div>
           )}
           {activeForm === "showRooms" && (
             <div className="mt-6">
-              <RoomList />
+              <RoomList sidebarOpen={sidebarOpen} />
             </div>
           )}
           {activeForm === "showUsers" && (
             <div className="mt-6">
-              <UserList />
+              <UserList sidebarOpen={sidebarOpen} />
             </div>
           )}
           {activeForm === "showLabs" && (
             <div className="mt-6">
-              <LabList />
+              <LabList sidebarOpen={sidebarOpen} />
             </div>
           )}
         </div>

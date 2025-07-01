@@ -19,7 +19,11 @@ export interface User {
   session?: string;
 }
 
-export default function UserList() {
+interface UserListProps {
+  sidebarOpen?: boolean
+}
+
+export default function UserList({ sidebarOpen = true }: UserListProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +234,7 @@ export default function UserList() {
   }
 
   return (
-    <div>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
       <h2 className="text-2xl font-bold mb-4">User List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       <button
