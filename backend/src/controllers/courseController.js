@@ -42,6 +42,7 @@ exports.addCourse = async (req, res) => {
 exports.getCourses = async (req, res) => {
   // Read departmentId from query params, fallback to admin's department
   const reqDeptId = Number(req.query.departmentId);
+  
   try {
     // Include teacher's name in the response
     const courses = await prisma.course.findMany({
@@ -52,7 +53,7 @@ exports.getCourses = async (req, res) => {
         ]
       },
       include: { teacher: { select: { id: true, name: true } } },
-      select: { id: true, name: true, code: true, credits: true, departmentId: true, teacherId: true, semesterId: true, type: true, isMajor: true, forDept: true },
+      // select: { id: true, name: true, code: true, credits: true, departmentId: true, teacherId: true, semesterId: true, type: true, isMajor: true, forDept: true },
     });
     // Map to include teacherName for frontend compatibility
     const coursesWithTeacher = courses.map(course => ({
