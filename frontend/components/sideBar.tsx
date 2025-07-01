@@ -21,13 +21,13 @@ export default function SideBar({
 }: SideBarProps) {
   return (
     <aside
-      className={`h-screen flex-shrink-0 flex flex-col justify-between sidebar-light shadow-lg p-2 sticky top-0 transition-all duration-300 ${
+      className={`h-screen flex-shrink-0 flex flex-col justify-between bg-white shadow p-2 sticky top-0 transition-all duration-300 ${
         sidebarOpen ? "w-64" : "w-16"
       }`}
     >
       {/* Top Section */}
       <div className="space-y-2 flex flex-col items-center">
-        <button
+        {/* <button
           className="btn btn-ghost flex items-center justify-center mb-2 cursor-pointer"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label={sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
@@ -35,7 +35,7 @@ export default function SideBar({
           {sidebarOpen ? <FaChevronLeft /> : <FaChevronRight />}
           
           {sidebarOpen && <span className="ml-2">Hide Sidebar</span>}
-        </button>
+        </button> */}
         <button
           className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-12" } ${activeForm === "showSlidingPage" ? "btn-active" : ""}`}
           onClick={() => { setActiveForm("showSlidingPage"); setError(""); setSuccess(""); }}
