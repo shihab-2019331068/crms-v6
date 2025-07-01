@@ -13,9 +13,14 @@ export interface Lab {
   capacity: number;
   status: string;
   departmentAcronym: string | null;
+  departmentId: number; // Added to fix property access error
 }
 
-export default function LabList() {
+interface LabListProps {
+  departmentId?: number;
+}
+
+export default function LabList({ departmentId }:LabListProps) {
   const { user } = useAuth();
   const [labs, setLabs] = useState<Lab[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,9 @@ export default function LabList() {
     setError(null);
     try {
       const response = await api.get<Lab[]>("/labs", { withCredentials: true });
+      if (departmentId) {
+        return response.data.filter(lab => lab.departmentId === departmentId);
+      }
       return response.data;
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
