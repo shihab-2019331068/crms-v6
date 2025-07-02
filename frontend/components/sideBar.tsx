@@ -1,4 +1,10 @@
-import { FaBuilding, FaDoorOpen, FaUser, FaFlask, FaChevronLeft, FaChevronRight, FaSignOutAlt } from "react-icons/fa";
+import { 
+  FaTachometerAlt, 
+  FaEye, 
+  FaUsersCog, 
+  FaCog,
+  FaSignOutAlt 
+} from "react-icons/fa";
 
 interface SideBarProps {
   activeForm: string;
@@ -21,71 +27,52 @@ export default function SideBar({
 }: SideBarProps) {
   return (
     <aside
-      className={`h-screen flex-shrink-0 flex flex-col justify-between bg-white shadow p-2 sticky top-0 transition-all duration-300 ${
+      className={`flex-shrink-0 flex flex-col justify-between sidebar-light shadow p-2 sticky top-0 transition-all duration-300 ${
         sidebarOpen ? "w-64" : "w-16"
-      }`}
+      } h-[calc(100vh)]`}
     >
       {/* Top Section */}
       <div className="space-y-2 flex flex-col items-center">
-        {/* <button
-          className="btn btn-ghost flex items-center justify-center mb-2 cursor-pointer"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label={sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-        >
-          {sidebarOpen ? <FaChevronLeft /> : <FaChevronRight />}
-          
-          {sidebarOpen && <span className="ml-2">Hide Sidebar</span>}
-        </button> */}
         <button
-          className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-12" } ${activeForm === "showSlidingPage" ? "btn-active" : ""}`}
+          className={`btn btn-outline flex items-center justify-center sb-btn ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showSlidingPage" ? "btn-active" : ""}`}
           onClick={() => { setActiveForm("showSlidingPage"); setError(""); setSuccess(""); }}
           disabled={loading}
-          title="Show Dashboard"
+          title="Dashboard"
         >
-          <FaBuilding />
+          <FaTachometerAlt />
           {sidebarOpen && <span className="ml-2">Dashboard</span>}
         </button>
         <button
-          className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${activeForm === "showDepartments" ? "btn-active" : ""}`}
-          onClick={() => { setActiveForm("showDepartments"); setError(""); setSuccess(""); }}
+          className={`flex items-center justify-center sb-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showView" ? "btn-active" : ""}`}
+          onClick={() => { setActiveForm("showView"); setError(""); setSuccess(""); }}
           disabled={loading}
-          title="Show All Departments"
+          title="View"
         >
-          <FaBuilding />
-          {sidebarOpen && <span className="ml-2">Departments</span>}
+          <FaEye />
+          {sidebarOpen && <span className="ml-2">View</span>}
         </button>
         <button
-          className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${activeForm === "showRooms" ? "btn-active" : ""}`}
-          onClick={() => { setActiveForm("showRooms"); setError(""); setSuccess(""); }}
+          className={`btn btn-outline flex items-center justify-center sb-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showManage" ? "btn-active" : ""}`}
+          onClick={() => { setActiveForm("showManagingPage"); setError(""); setSuccess(""); }}
           disabled={loading}
-          title="Show All Rooms"
+          title="Manage"
         >
-          <FaDoorOpen />
-          {sidebarOpen && <span className="ml-2">Rooms</span>}
+          <FaUsersCog />
+          {sidebarOpen && <span className="ml-2">Manage</span>}
         </button>
         <button
-          className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${activeForm === "showUsers" ? "btn-active" : ""}`}
-          onClick={() => { setActiveForm("showUsers"); setError(""); setSuccess(""); }}
+          className={`btn btn-outline flex items-center justify-center sb-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showSettings" ? "btn-active" : ""}`}
+          onClick={() => { setActiveForm("showSettings"); setError(""); setSuccess(""); }}
           disabled={loading}
-          title="Show All Users"
+          title="Settings"
         >
-          <FaUser />
-          {sidebarOpen && <span className="ml-2">Users</span>}
-        </button>
-        <button
-          className={`btn btn-outline flex items-center justify-center custom-bordered-btn cursor-pointer ${activeForm === "showLabs" ? "btn-active" : ""}`}
-          onClick={() => { setActiveForm("showLabs"); setError(""); setSuccess(""); }}
-          disabled={loading}
-          title="Show All Labs"
-        >
-          <FaFlask />
-          {sidebarOpen && <span className="ml-2">Labs</span>}
+          <FaCog />
+          {sidebarOpen && <span className="ml-2">Settings</span>}
         </button>
       </div>
-      {/* Bottom Section */}
       <div className="flex flex-col items-center">
         <button
-          className="btn btn-error flex items-center justify-center custom-bordered-btn cursor-pointer"
+          className="btn btn-error flex items-center justify-center sb-btn cursor-pointer"
           onClick={() => {
             window.location.href = '/login';
           }}

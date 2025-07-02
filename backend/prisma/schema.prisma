@@ -26,6 +26,8 @@ model User {
   logs             Log[]
   semesterTeachers SemesterTeacher[]
   session          String?      // Optional, but required if role is STUDENT (enforce in app logic)
+  accesses         String[]     // Acts like a set of strings for access control
+
 
   @@map("users")
 }

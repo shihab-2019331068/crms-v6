@@ -1,10 +1,10 @@
 const pool = require('../config/db');
 
-const createUser = async (name, email, passwordHash, role, departmentId = null, session = null) => {
+const createUser = async (name, email, passwordHash, role, departmentId = null, session = null, accesses = []) => {
   // If role is super_admin, departmentId is null; otherwise, departmentId is required
   const result = await pool.query(
-    'INSERT INTO users (name, email, password_hash, role, "departmentId", session) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, "departmentId", session, created_at',
-    [name, email, passwordHash, role, departmentId, session]
+    'INSERT INTO users (name, email, password_hash, role, "departmentId", session, accesses) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, email, role, "departmentId", session, created_at, accesses',
+    [name, email, passwordHash, role, departmentId, session, accesses]
   );
   return result.rows[0];
 };

@@ -3,12 +3,14 @@ import { useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import DepartmentList from "@/components/departmentList";
-import SlidingPage from "@/components/slidingPage";
+import SlidingPage from "@/pages/slidingPage";
+import ManagingPage from "@/pages/managingPage";
 import RoomList from "@/components/RoomList";
 import LabList from "@/components/LabList";
 import UserList from "@/components/userList";
 import SideBar from "@/components/sideBar";
 import Navbar from "@/components/navBar";
+import { useEffect } from "react";
 
 export default function SuperAdminDashboard() {
   const [loading] = useState(false);
@@ -16,7 +18,7 @@ export default function SuperAdminDashboard() {
   const [success, setSuccess] = useState("");
   const [activeForm, setActiveForm] = useState("showSlidingPage");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  
   return (
     <div className="min-h-screen bg-background text-black flex flex-col">
       {/* Fixed Navbar at the top */}
@@ -51,9 +53,9 @@ export default function SuperAdminDashboard() {
                 <SlidingPage sidebarOpen={sidebarOpen} />
               </div>
             )}
-            {activeForm === "showDepartments" && (
+            {activeForm === "showManagingPage" && (
               <div className="mt-6">
-                <DepartmentList sidebarOpen={sidebarOpen} />
+                <ManagingPage sidebarOpen={sidebarOpen} />
               </div>
             )}
             {activeForm === "showRooms" && (

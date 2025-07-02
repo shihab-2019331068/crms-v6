@@ -6,7 +6,7 @@ const signup = async (req, res, next) => {
   try {
     const { name, email, password, role, department, session } = req.body;
 
-    console.log('Signup request received:', { name, email, role, department, session });
+    // console.log('Signup request received:', { name, email, role, department, session });
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'All fields are required.' });
@@ -39,9 +39,13 @@ const signup = async (req, res, next) => {
       return res.status(409).json({ error: 'Email already registered.' });
     }
     const passwordHash = await bcrypt.hash(password, 10);
+    let accesses = [];
+    if (role === 'super_admin') {
+      accesses = ['manageDepartment', 'manageRooms', 'manageLabs', 'manageUsers'];
+    }
     // Pass session to createUser
-    const user = await createUser(name, email, passwordHash, role, departmentId, session);
-    res.status(201).json({ message: 'User registered successfully.', user: { id: user.id, name: user.name, email: user.email, role: user.role, departmentId: user.department_id, session: user.session } });
+    const user = await createUser(name, email, passwordHash, role, departmentId, session, accesses);
+    res.status(201).json({ message: 'User registered successfully.', user: { id: user.id, name: user.name, email: user.email, role: user.role, departmentId: user.department_id, session: user.session, accesses: user.accesses } });
   } catch (err) {
     next(err);
   }

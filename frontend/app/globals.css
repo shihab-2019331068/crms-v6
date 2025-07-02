@@ -41,9 +41,12 @@ body {
   color: #ffffff !important; /* White font in dark sidebar */
 }
 
+.navbar-light {
+  background-color: #E6F0FA;
+}
+
 .sidebar-light {
-  background-color: #054232;
-  color: #ffffff !important; /* White font in light sidebar */
+  background-color: #E6F0FA;
 }
 
 .form-bg-dark {
@@ -52,4 +55,23 @@ body {
 
 .page-bg-light {
   background-color: #FFFFFF;
+}
+
+.sb-btn {
+  background-color: #E6F0FA !important;
+  color: #181818;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  /* box-shadow: 0 1px 4px 0 rgba(0,0,0,0.06); */
+  transition: background 0.18s, color 0.18s;
+  cursor: pointer;
+}
+
+.sb-btn:hover,
+.sb-btn:focus {
+  background-color: #F0F7FD !important;
+  color: #181818;
+  outline: none;
 }
