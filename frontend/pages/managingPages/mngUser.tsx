@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import AuthForm from "@/components/AuthForm";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FaTrash, FaChair, FaBuilding, FaInfoCircle } from 'react-icons/fa';
+
 
 import TeacherCourses from '@/components/teacherCourses';
 
@@ -104,7 +107,7 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 16;
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -234,7 +237,7 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 w-full`}>
       <h2 className="text-2xl font-bold mb-4">User List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       <button
@@ -364,154 +367,64 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
         </div>
       </div>
       {roleFilter ? (
-        <div className="overflow-x-auto min-w-[1550px]">
+        <div className="overflow-x-auto w-full">
           <div className="overflow-y-auto max-h-[calc(15*3rem)] relative">
-            <table className="border" style={{ width: tableWidth }}>
-              <thead className="sticky top-0 bg-gray-700 z-10">
-                <tr>
-                  {roleFilter === "super_admin" && (
-                    <>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Email</th>
-                    </>
-                  )}
-                  {roleFilter === "department_admin" && (
-                    <>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Email</th>
-                      <th className="py-2 px-4 border-b">Department</th>
-                      <th className="py-2 px-4 border-b">Actions</th>
-                    </>
-                  )}
-                  {roleFilter === "teacher" && (
-                    <>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Email</th>
-                      <th className="py-2 px-4 border-b">Department</th>
-                      <th className="py-2 px-4 border-b">Actions</th>
-                      <th className="py-2 px-4 border-b">Courses</th>
-                    </>
-                  )}
-                  {roleFilter === "student" && (
-                    <>
-                      <th className="py-2 px-4 border-b">Name</th>
-                      <th className="py-2 px-4 border-b">Email</th>
-                      <th className="py-2 px-4 border-b">Department</th>
-                      <th className="py-2 px-4 border-b">Session</th>
-                      <th className="py-2 px-4 border-b">Actions</th>
-                      <th className="py-2 px-4 border-b">View</th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedUsers.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    {roleFilter === "super_admin" && (
-                      <>
-                        <td className="py-2 px-4">{user.name}</td>
-                        <td className="py-2 px-4">{user.email}</td>
-                      </>
-                    )}
-                    {roleFilter === "department_admin" && (
-                      <>
-                        <td className="py-2 px-4">{user.name}</td>
-                        <td className="py-2 px-4">{user.email}</td>
-                        <td className="py-2 px-4">{user.department?.acronym || ''}</td>
-                        <td className="py-2 px-4">
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </>
-                    )}
-                    {roleFilter === "teacher" && (
-                      <>
-                        <td className="py-2 px-4">{user.name}</td>
-                        <td className="py-2 px-4">{user.email}</td>
-                        <td className="py-2 px-4">{user.department?.acronym || ''}</td>
-                        <td className="py-2 px-4">
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                        <td className="py-2 px-4">
-                          <button
-                            onClick={() => setSelectedTeacherId(user.id)}
-                            className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                          >
-                            Courses
-                          </button>
-                        </td>
-                      </>
-                    )}
-                    {roleFilter === "student" && (
-                      <>
-                        <td className="py-2 px-4">{user.name}</td>
-                        <td className="py-2 px-4">{user.email}</td>
-                        <td className="py-2 px-4">{user.department?.acronym || ''}</td>
-                        <td className="py-2 px-4">{user.session}</td>
-                        <td className="py-2 px-4">
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                        <td className="py-2 px-4">
-                          <button
-                            className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                          >
-                            View
-                          </button>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="grid lg:grid-cols-4 gap-4">
+              {displayedUsers.map((user) => (
+                <Card key={user.id} className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader>
+                    <CardTitle>{user.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-between items-center">
+                    {user.department && (<div className="flex items-center text-sm text-gray-500">
+                      <FaInfoCircle className="mr-1" /> {user.department?.acronym || ''}
+                    </div>)}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                      >
+                        <FaTrash className="mr-1" /> Delete
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-lg text-gray-400">Please select a role to view users.</p>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-400">Please select a role to view users.</p>
+          </div>
+        )}
 
-      {/* Pagination Controls */}
-      <div className="mt-4 space-x-2">
-        <button
-          className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        {[...Array(totalPages)].map((_, index) => (
+        {/* Pagination Controls */}
+        <div className="mt-4 space-x-2">
           <button
-            key={index + 1}
-            className={`btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn ${currentPage === index + 1 ? 'btn-active' : ''}`}
-            onClick={() => setCurrentPage(index + 1)}
+            className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
           >
-            {index + 1}
+            Previous
           </button>
-        ))}
-        <button
-          className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index + 1}
+              className={`btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn ${currentPage === index + 1 ? 'btn-active' : ''}`}
+              onClick={() => setCurrentPage(index + 1)}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
   );
 }

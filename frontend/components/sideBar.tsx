@@ -34,6 +34,15 @@ export default function SideBar({
       {/* Top Section */}
       <div className="space-y-2 flex flex-col items-center">
         <button
+          className={`btn btn-outline flex items-center justify-center sb-btn ${sidebarOpen ? "w-60" : "w-15"}`}
+          onClick={() => { setSidebarOpen(!sidebarOpen); setError(""); setSuccess(""); }}
+          disabled={loading}
+          title="Dashboard"
+        >
+          <FaTachometerAlt />
+          {sidebarOpen && <span className="ml-2">Hide Sidebar</span>}
+        </button>
+        <button
           className={`btn btn-outline flex items-center justify-center sb-btn ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showSlidingPage" ? "btn-active" : ""}`}
           onClick={() => { setActiveForm("showSlidingPage"); setError(""); setSuccess(""); }}
           disabled={loading}

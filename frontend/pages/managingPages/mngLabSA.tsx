@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FaTrash, FaChair, FaBuilding, FaInfoCircle } from 'react-icons/fa';
 
 import {
   Department,
@@ -141,7 +143,7 @@ export default function mngLabSA({ sidebarOpen = true }: mngLabSAProps) {
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 w-full`}>
       <h2 className="text-2xl font-bold mb-4">Lab List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {user?.role === "super_admin" && (
@@ -200,41 +202,35 @@ export default function mngLabSA({ sidebarOpen = true }: mngLabSAProps) {
           {loading ? "Adding..." : "Add Lab"}
         </button>
       </form>)}
-      <table className="border" style={{ width: tableWidth }}>
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b">Lab Name</th>
-            <th className="py-2 px-4 border-b">Lab Number</th>
-            <th className="py-2 px-4 border-b">Capacity</th>
-            <th className="py-2 px-4 border-b">Status</th>
-            <th className="py-2 px-4 border-b">Department</th>
-            {user?.role === "super_admin" && (
-              <th className="py-2 px-4 border-b">Actions</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {labs.map((lab) => (
-            <tr key={lab.id} className="border-b">
-              <td className="py-2 px-4">{lab.name}</td>
-              <td className="py-2 px-4">{lab.labNumber}</td>
-              <td className="py-2 px-4">{lab.capacity}</td>
-              <td className="py-2 px-4">{lab.status}</td>
-              <td className="py-2 px-4">{lab.departmentAcronym}</td>
-              {user?.role === "super_admin" && (
-                <td className="py-2 px-4">
-                  <button
-                    onClick={() => handleDeleteLab(lab.id)}
-                    className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                  >
-                    Delete
-                  </button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex flex-col gap-4">
+        {labs.map((lab) => (
+          <Card key={lab.id} className="hover:shadow-lg transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle>{lab.labNumber}</CardTitle>
+            </CardHeader>
+            
+            <CardContent className="flex justify-between items-center">
+              <div className="flex items-center text-sm text-gray-500">
+                <FaChair className="mr-1" /> {lab.capacity}
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <FaInfoCircle className="mr-1" /> {lab.status}
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <FaBuilding className="mr-1" /> {lab.departmentAcronym}
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleDeleteLab(lab.id)}
+                  className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                >
+                  <FaTrash className="mr-1" /> Delete
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

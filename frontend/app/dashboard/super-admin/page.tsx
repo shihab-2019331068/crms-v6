@@ -21,16 +21,7 @@ export default function SuperAdminDashboard() {
   
   return (
     <div className="min-h-screen bg-background text-black flex flex-col">
-      {/* Fixed Navbar at the top */}
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Navbar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
-      </div>
-
-      {/* Add padding-top to offset the fixed navbar height (adjust if needed) */}
-      <div className="flex flex-1 pt-10">
+      <div className="flex flex-1">
         {/* Sidebar */}
         <div className="sticky top-10">
           <SideBar
@@ -44,8 +35,8 @@ export default function SuperAdminDashboard() {
           />
         </div>
         {/* Main Content */}
-        <div className="flex-1 flex flex-col p-4 w-full">
-          <div className="w-full space-y-8">
+        <div className="flex-1 flex flex-col w-full">
+          <div className="w-full">
             {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
             {success && activeForm && <div className="text-green-600 text-center">{success}</div>}
             {activeForm === "showSlidingPage" && (
