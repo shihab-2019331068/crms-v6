@@ -44,7 +44,7 @@ export default function SuperAdminDashboard() {
           />
         </div>
         {/* Main Content */}
-        <div className="flex-1 flex flex-col p-4" style={{ minWidth: '1500px' }}>
+        <div className="flex-1 flex flex-col p-4 w-full">
           <div className="w-full space-y-8">
             {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
             {success && activeForm && <div className="text-green-600 text-center">{success}</div>}

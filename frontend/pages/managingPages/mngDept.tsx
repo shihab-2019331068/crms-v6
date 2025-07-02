@@ -137,9 +137,7 @@ export default function mngDept({ sidebarOpen = true }: mngDeptProps) {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${
-        sidebarOpen ? "w-300" : "w-348"
-      }`}>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black w-full`}>
       <h2 className="text-2xl font-bold mb-4">Department List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {/* Add Department Button */}

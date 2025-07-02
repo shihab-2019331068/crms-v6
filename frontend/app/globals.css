@@ -42,11 +42,11 @@ body {
 }
 
 .navbar-light {
-  background-color: #E6F0FA;
+  background-color: #F9F9F9;
 }
 
 .sidebar-light {
-  background-color: #E6F0FA;
+  background-color: #F9F9F9;
 }
 
 .form-bg-dark {
@@ -58,7 +58,7 @@ body {
 }
 
 .sb-btn {
-  background-color: #E6F0FA !important;
+  background-color: #F9F9F9 !important;
   color: #181818;
   border: none;
   border-radius: 0.75rem;
@@ -71,7 +71,7 @@ body {
 
 .sb-btn:hover,
 .sb-btn:focus {
-  background-color: #F0F7FD !important;
+  background-color: #EAEAEA !important;
   color: #181818;
   outline: none;
 }

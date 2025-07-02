@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FaTrash, FaChair, FaBuilding, FaInfoCircle } from 'react-icons/fa';
 
 import {
   Department,
@@ -142,7 +144,7 @@ export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomS
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 ${ sidebarOpen ? "w-300" : "w-348" }`}>
+    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 w-full`}>
       <h2 className="text-2xl font-bold mb-4">Room List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {user?.role === "super_admin" && (
@@ -194,39 +196,35 @@ export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomS
           {loading ? "Adding..." : "Add Room"}
         </button>
       </form>)}
-      <table className={`${ sidebarOpen ? "w-284" : "w-332" }`}>
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b">Room Number</th>
-            <th className="py-2 px-4 border-b">Capacity</th>
-            <th className="py-2 px-4 border-b">Status</th>
-            <th className="py-2 px-4 border-b">Department</th>
-            {user?.role === "super_admin" && (
-              <th className="py-2 px-4 border-b">Actions</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredRooms.map((room) => (
-            <tr key={room.id} className="border-b">
-              <td className="py-2 px-4">{room.roomNumber}</td>
-              <td className="py-2 px-4">{room.capacity}</td>
-              <td className="py-2 px-4">{room.status}</td>
-              <td className="py-2 px-4">{room.departmentAcronym}</td>
-              {user?.role === "super_admin" && (
-                <td className="py-2 px-4">
-                  <button
-                    onClick={() => handleDeleteRoom(room.id)}
-                    className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-                  >
-                    Delete
-                  </button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex flex-col gap-4">
+        {rooms.map((room) => (
+          <Card key={room.id} className="hover:shadow-lg transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle>{room.roomNumber}</CardTitle>
+            </CardHeader>
+            
+            <CardContent className="flex justify-between items-center">
+              <div className="flex items-center text-sm text-gray-500">
+                <FaChair className="mr-1" /> {room.capacity}
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <FaInfoCircle className="mr-1" /> {room.status}
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <FaBuilding className="mr-1" /> {room.departmentAcronym}
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleDeleteRoom(room.id)}
+                  className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                >
+                  <FaTrash className="mr-1" /> Delete
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
