@@ -3,7 +3,8 @@ import {
   FaEye, 
   FaUsersCog, 
   FaCog,
-  FaSignOutAlt 
+  FaSignOutAlt,
+  FaBars,
 } from "react-icons/fa";
 
 interface SideBarProps {
@@ -39,7 +40,7 @@ export default function SideBar({
           disabled={loading}
           title="Dashboard"
         >
-          <FaTachometerAlt />
+          <FaBars />
           {sidebarOpen && <span className="ml-2">Hide Sidebar</span>}
         </button>
         <button

@@ -196,7 +196,7 @@ export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomS
           {loading ? "Adding..." : "Add Room"}
         </button>
       </form>)}
-      <div className="flex flex-col gap-4">
+      <div className="grid lg:grid-cols-4 gap-4">
         {rooms.map((room) => (
           <Card key={room.id} className="hover:shadow-lg transition-shadow duration-200">
             <CardHeader>

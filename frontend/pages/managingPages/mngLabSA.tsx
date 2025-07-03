@@ -202,7 +202,7 @@ export default function mngLabSA({ sidebarOpen = true }: mngLabSAProps) {
           {loading ? "Adding..." : "Add Lab"}
         </button>
       </form>)}
-      <div className="flex flex-col gap-4">
+      <div className="grid lg:grid-cols-4 gap-4">
         {labs.map((lab) => (
           <Card key={lab.id} className="hover:shadow-lg transition-shadow duration-200">
             <CardHeader>

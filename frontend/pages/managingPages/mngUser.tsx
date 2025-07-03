@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import AuthForm from "@/components/AuthForm";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaTrash, FaChair, FaBuilding, FaInfoCircle } from 'react-icons/fa';
-
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FaTrash, FaInfoCircle, FaEllipsisV, FaUserTie } from 'react-icons/fa';
 import TeacherCourses from '@/components/teacherCourses';
 
 interface Department {
@@ -35,72 +33,8 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
   const [showDummyAddForm, setShowDummyAddForm] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
-
-  // Dummy user creation states
-  const [dummyRole, setDummyRole] = useState<"teacher" | "student">("student");
-  const [dummyStartIndex, setDummyStartIndex] = useState(1);
-  const [dummyEndIndex, setDummyEndIndex] = useState(1);
-  const [dummySession, setDummySession] = useState("");
-  const [dummyDepartmentId, setDummyDepartmentId] = useState<string>("");
-  const [dummyDepartmentAcronym, setDummyDepartmentAcronym] = useState("");
-
+  const [openOptionsUserId, setOpenOptionsUserId] = useState<number | null>(null);
   
-  const [tableWidth, setTableWidth] = useState(1);
-  useEffect(() => {
-    const handleResize = () => {
-      setTableWidth (window.innerWidth - 300);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Log initial size
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleAddDummyUsers = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess("");
-
-    if (dummyRole === "student" && !dummySession.trim()) {
-      setError("Session is required for dummy students.");
-      setLoading(false);
-      return;
-    }
-
-    for (let i = dummyStartIndex; i <= dummyEndIndex; i++) {
-      const name = `${dummyDepartmentAcronym.toUpperCase()} ${dummyRole} ${i}`;
-      const email = `${dummyDepartmentAcronym.toLowerCase()}${dummyRole}${i}@example.com`;
-      const password = "pass123";
-
-      try {
-        await api.post(
-          "/signup",
-          {
-            name,
-            email,
-            password,
-            confirmPassword: password,
-            role: dummyRole,
-            department: dummyDepartmentId,
-            session: dummyRole === "student" ? dummySession : undefined,
-          },
-          { withCredentials: true }
-        );
-        setSuccess(`Added ${dummyRole} ${name}`);
-      } catch (err) {
-        const error = err as { response?: { data?: { error?: string } } };
-        setError(error.response?.data?.error || `Failed to add dummy ${dummyRole} ${name}`);
-        setLoading(false);
-        return; // Stop on first error
-      }
-    }
-    setSuccess(`Successfully added ${dummyEndIndex - dummyStartIndex + 1} dummy ${dummyRole}s.`);
-    const res = await api.get<User[]>("/dashboard/super-admin/users", { withCredentials: true });
-    setUsers(res.data);
-    setLoading(false);
-  };
-
   // Add filter states
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
@@ -148,6 +82,26 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
     }
   };
 
+  const handleMakeHeadAdmin = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post(
+        `/grant-access`,
+        { userId: id, access: ["accessManager"] },
+        { withCredentials: true }
+      );
+      setSuccess("User successfully made Head Admin!");
+      const res = await api.get<User[]>("/dashboard/super-admin/users", { withCredentials: true });
+      setUsers(res.data);
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || "Failed to make user Head Admin");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtered users
   const filteredUsers = users.filter(user => {
     if (!roleFilter) return false; // Don't show any users if no role is selected
@@ -163,58 +117,6 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedUsers = filteredUsers.slice(startIndex, endIndex);
-
-  // Validation helpers (copy from register page)
-  function isNonEmpty(str: string) {
-    return !!str && str.trim().length > 0;
-  }
-  function isValidEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-  function isStrongPassword(password: string) {
-    return password.length >= 6 && /[A-Za-z]/.test(password) && /\d/.test(password);
-  }
-
-  async function handleRegister(data: { name: string; email: string; password: string; confirmPassword: string; role: string; department: string; session?: string }) {
-    setError("");
-    // Custom validation for super_admin: department not required, session required for student
-    if (
-      !isNonEmpty(data.name) ||
-      !isNonEmpty(data.email) ||
-      !isNonEmpty(data.password) ||
-      !isNonEmpty(data.confirmPassword) ||
-      !isNonEmpty(data.role) ||
-      (data.role !== "super_admin" && !isNonEmpty(data.department)) ||
-      (data.role === "student" && !isNonEmpty(data.session ?? ''))
-    ) {
-      setError("All fields are required.");
-      return;
-    }
-    if (!isValidEmail(data.email)) {
-      setError("Invalid email address.");
-      return;
-    }
-    if (!isStrongPassword(data.password)) {
-      setError("Password must be at least 6 characters and contain letters and numbers.");
-      return;
-    }
-    if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await api.post("/signup", data, { withCredentials: true });
-      setSuccess("User registered successfully!");
-      setShowAddForm(false);
-      fetchUsers().then(setUsers).catch(err => setError(err.message));
-    } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || "Failed to register user");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
     fetchUsers()
@@ -240,99 +142,6 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
     <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 w-full`}>
       <h2 className="text-2xl font-bold mb-4">User List</h2>
       {success && <div className="text-green-600 mb-2">{success}</div>}
-      <button
-        className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
-        onClick={() => setShowAddForm((v) => !v)}
-      >
-        [+add user]
-      </button>
-      <button
-        className="btn btn-outline btn-sm mb-4 ml-4 cursor-pointer custom-bordered-btn"
-        onClick={() => setShowDummyAddForm((v) => !v)}
-      >
-        {showDummyAddForm ? "[-hide dummy user form]" : "[+add dummy users]"}
-      </button>
-      {showAddForm && (
-        <AuthForm type="register" onSubmit={handleRegister} loading={loading} error={error || ""} departments={departments} />
-      )}
-
-      {showDummyAddForm && (
-        <div className="mt-6 p-4 border rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Add Multiple Dummy Users</h3>
-        <div className="flex flex-col gap-2 mb-4">
-          <label className="block">
-            Role:
-            <select
-              value={dummyRole}
-              onChange={e => setDummyRole(e.target.value as "teacher" | "student")}
-              className="input input-bordered w-full mt-1 form-bg-dark text-white"
-            >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-            </select>
-          </label>
-          <label className="block">
-            Department:
-            <select
-              value={dummyDepartmentAcronym}
-              onChange={e => {
-                const selectedAcronym = e.target.value;
-                setDummyDepartmentAcronym(selectedAcronym);
-                const selectedDept = departments.find(dept => dept.acronym === selectedAcronym);
-                if (selectedDept) {
-                  setDummyDepartmentId(selectedDept.id);
-                }
-              }}
-              className="input input-bordered w-full mt-1 form-bg-dark text-white"
-              required
-            >
-              <option value="">Select Department</option>
-              {departments.map(dept => (
-                <option key={dept.id} value={dept.acronym}>
-                  {dept.name} ({dept.acronym})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            Start Index:
-            <input
-              type="number"
-              value={dummyStartIndex}
-              onChange={e => setDummyStartIndex(Number(e.target.value))}
-              className="input input-bordered w-full mt-1"
-            />
-          </label>
-          <label className="block">
-            End Index:
-            <input
-              type="number"
-              value={dummyEndIndex}
-              onChange={e => setDummyEndIndex(Number(e.target.value))}
-              className="input input-bordered w-full mt-1"
-            />
-          </label>
-          {dummyRole === "student" && (
-            <label className="block">
-              Session (e.g., 2019-2020):
-              <input
-                type="text"
-                value={dummySession}
-                onChange={e => setDummySession(e.target.value)}
-                className="input input-bordered w-full mt-1"
-                placeholder="2019-2020"
-              />
-            </label>
-          )}
-        </div>
-        <button
-          className="btn btn-outline btn-sm w-full cursor-pointer custom-bordered-btn"
-          onClick={handleAddDummyUsers}
-          disabled={loading}
-        >
-          {loading ? "Adding..." : "Add Dummy Users"}
-        </button>
-      </div>)}
       
       {/* Filter controls */}
       <div className="flex gap-4 mb-4">
@@ -370,26 +179,42 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
         <div className="overflow-x-auto w-full">
           <div className="overflow-y-auto max-h-[calc(15*3rem)] relative">
             <div className="grid lg:grid-cols-4 gap-4">
-              {displayedUsers.map((user) => (
-                <Card key={user.id} className="hover:shadow-lg transition-shadow duration-200">
-                  <CardHeader>
-                    <CardTitle>{user.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex justify-between items-center">
-                    {user.department && (<div className="flex items-center text-sm text-gray-500">
-                      <FaInfoCircle className="mr-1" /> {user.department?.acronym || ''}
-                    </div>)}
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
-                      >
-                        <FaTrash className="mr-1" /> Delete
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {displayedUsers.map((user) => {
+                const optionOpen = openOptionsUserId === user.id;
+                return (
+                  <Card key={user.id} onClick={() => setOpenOptionsUserId(optionOpen ? null : user.id)} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
+                    <CardHeader>
+                      <CardTitle>{user.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-between items-center">
+                      {user.department && (<div className="flex items-center text-sm text-gray-500">
+                        <FaInfoCircle className="mr-1" /> {user.department?.acronym || ''}
+                      </div>)}
+                      <div className="flex items-center space-x-2">
+                        {optionOpen && (
+                          <div className="flex flex-col space-y-1 items-start">
+                            <button
+                              onClick={() => handleMakeHeadAdmin(user.id)}
+                              className="flex items-center text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                            >
+                              <FaUserTie className="mr-1" /> Make Head
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                            >
+                              <FaTrash className="mr-1" /> Delete
+                            </button>
+                          </div>
+                        )}
+                        <button className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 cursor-pointer" aria-label="Options">
+                          <FaEllipsisV />
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </div>

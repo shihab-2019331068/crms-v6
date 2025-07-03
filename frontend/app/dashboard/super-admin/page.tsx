@@ -9,7 +9,6 @@ import RoomList from "@/components/RoomList";
 import LabList from "@/components/LabList";
 import UserList from "@/components/userList";
 import SideBar from "@/components/sideBar";
-import Navbar from "@/components/navBar";
 import { useEffect } from "react";
 
 export default function SuperAdminDashboard() {
@@ -35,7 +34,7 @@ export default function SuperAdminDashboard() {
           />
         </div>
         {/* Main Content */}
-        <div className="flex-1 flex flex-col w-full">
+        <div className="">
           <div className="w-full">
             {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
             {success && activeForm && <div className="text-green-600 text-center">{success}</div>}

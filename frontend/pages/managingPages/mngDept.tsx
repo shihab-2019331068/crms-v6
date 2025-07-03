@@ -192,7 +192,7 @@ export default function mngDept({ sidebarOpen = true }: mngDeptProps) {
         </form>
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className="grid lg:grid-cols-4 gap-4">
         {departments.map((dept) => (
           <Card key={dept.id} className="hover:shadow-lg transition-shadow duration-200">
             <CardHeader>
