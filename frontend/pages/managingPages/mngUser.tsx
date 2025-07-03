@@ -88,7 +88,7 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
     try {
       await api.post(
         `/grant-access`,
-        { userId: id, access: ["accessManager"] },
+        { userId: id, access: ["manageAccess"] },
         { withCredentials: true }
       );
       setSuccess("User successfully made Head Admin!");

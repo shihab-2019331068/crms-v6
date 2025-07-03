@@ -8,6 +8,7 @@ import ManageDept from './managingPages/mngDept';
 import ManageRoomSA from './managingPages/mngRoomSA';
 import ManageLabSA from './managingPages/mngLabSA';
 import ManageUser from './managingPages/mngUser';
+import ManageAccess from './managingPages/mngAccess';
 
 interface ManagingPageProps {
   sidebarOpen?: boolean
@@ -17,6 +18,7 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
   const { user } = useAuth();
   const [accesses, setAccesses] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<string | null>(null);
+  const [deptId, setDeptId] = useState<number>(1);
 
   useEffect(() => {
     const fetchUserAccesses = async () => {
@@ -24,6 +26,7 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
         try {
           const response = await api.get(`/user/${user.email}`);
           setAccesses(response.data.accesses || []);
+          setDeptId(response.data.departmentId);
         } catch (error) {
           console.error('Failed to fetch user accesses', error);
         }
@@ -47,6 +50,8 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
         return <ManageLabSA />;
       case 'manageUsers':
         return <ManageUser />;
+      case 'manageAccess':
+        return <ManageAccess deptId={deptId} />;
       default:
         return (
             <div >
@@ -54,6 +59,8 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
         );
     }
   };
+
+  console.log("Access:", accesses, deptId);
 
   return (
     <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${ sidebarOpen ? "w-316" : "w-364" }`}>

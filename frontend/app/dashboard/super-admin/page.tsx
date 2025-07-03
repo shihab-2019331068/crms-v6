@@ -16,7 +16,7 @@ export default function SuperAdminDashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeForm, setActiveForm] = useState("showManagingPage");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
     <div className="min-h-screen bg-background text-black flex flex-col">

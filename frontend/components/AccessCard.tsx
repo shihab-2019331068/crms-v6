@@ -29,6 +29,11 @@ const accessDetails: { [key: string]: { title: string; description: string; link
     title: 'Manage Users',
     description: 'Add, edit, and remove users.',
     link: '/dashboard/managing/users'
+  },
+  manageAccess: {
+    title: 'Manage Access',
+    description: 'Add, edit, and remove user accesses.',
+    link: '/dashboard/managing/users'
   }
 };
 

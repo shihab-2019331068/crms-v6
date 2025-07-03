@@ -1,7 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const authenticateToken = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleMiddleware');
+const superAdminController = require('../controllers/superAdminController');
+const userController = require('../controllers/userController');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+
+
+// Get all users (Super Admin only)
+router.get(
+  '/users',
+  authenticateToken,
+  authorizeRoles('super_admin', 'department_admin', 'teacher'),
+  superAdminController.getAllUsers
+);
+
+// Get department users
+router.get(
+  '/department/:departmentId/users',
+  authenticateToken,
+  authorizeRoles('super_admin', 'department_admin', 'teacher'),
+  userController.getDeptUsers
+)
 
 // Get all rooms (Prisma)
 router.get('/rooms', async (req, res) => {

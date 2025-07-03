@@ -19,7 +19,7 @@ exports.grantAccess = async (req, res) => {
     }
 
     let currentAccesses = user.accesses || [];
-    currentAccesses = [...new Set([...currentAccesses, ...access])];
+    currentAccesses = [...new Set([...access])];
 
     const updatedUser = await prisma.user.update({
       where: { id: Number(userId) },
