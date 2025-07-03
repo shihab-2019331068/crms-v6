@@ -11,6 +11,7 @@ const deptAdminRoutes = require('./routes/deptAdminRoutes');
 const superAdminRoutes = require('./routes/superAdminRoutes');
 const generalRoutes = require('./routes/generalRoutes');
 const routineRoutes = require('./routes/routineRoutes');
+const labRoutes = require('./routes/labRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const accessRoutes = require('./routes/accessRoutes');
 const errorHandler = require('./middleware/errorHandler');
@@ -33,6 +34,7 @@ app.use('/api', generalRoutes);
 app.use('/api', routineRoutes);
 app.use('/api', accessRoutes);
 app.use('/api', roomRoutes);
+app.use('/api', labRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT;

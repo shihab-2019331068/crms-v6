@@ -1,236 +1,210 @@
+// --- START OF FILE mnglab.tsx ---
+
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaTrash, FaChair, FaBuilding, FaInfoCircle, FaEllipsisV } from 'react-icons/fa';
+import { FaChair, FaBuilding, FaInfoCircle, FaEllipsisV } from 'react-icons/fa';
+// Removed unused imports for Button and Input as they are replaced with standard HTML elements.
 
 import {
   Department,
 }  from "./mngDept";
 
-export interface Room {
+
+export interface Lab {
   id: number;
-  roomNumber: string;
+  labName: string;
+  labNumber: string;
   capacity: number;
   status: string;
   departmentId: number;
   departmentAcronym: string | null;
 }
 
-interface mngRoomSAProps {
-  departmentId?: number;
-  sidebarOpen?: boolean;
+interface mngLabProps {
+  // Make departmentId optional to handle initial render states gracefully
+  departmentId?: number; 
 }
 
-export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomSAProps) {
+export default function MngLab({ departmentId }: mngLabProps) { // Renamed to PascalCase for convention
   const { user } = useAuth();
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [labs, setLabs] = useState<Lab[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [roomNumber, setRoomNumber] = useState("");
-  const [roomCapacity, setRoomCapacity] = useState("");
-  const [roomDeptId, setRoomDeptId] = useState("");
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [openOptionsRoomId, setOpenOptionsRoomId] = useState<number | null>(null);
+  const [openOptionsLabId, setOpenOptionsLabId] = useState<number | null>(null);
+  const [editingCapacity, setEditingCapacity] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  
-  const [tableWidth, setTableWidth] = useState(1);
-  useEffect(() => {
-    const handleResize = () => {
-      setTableWidth (window.innerWidth - 300);
-    };
 
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Log initial size
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const fetchRooms = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get<Room[]>("/rooms", { withCredentials: true });
-      return response.data;
-    } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      throw new Error(error.response?.data?.error || 'Failed to fetch rooms');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteRoom = async (id: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await api.delete(`/dashboard/super-admin/room/${id}`, { withCredentials: true });
-      setSuccess("Room deleted successfully!");
-      // Refetch rooms after deletion
-      const res = await api.get<Room[]>("/rooms", { withCredentials: true });
-      setRooms(res.data);
-    } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || "Failed to delete room");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleAddRoom = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleUpdateCapacity = async (labId: number) => {
     setError(null);
     setSuccess("");
-    if (!roomNumber.trim() || !roomCapacity.trim() || !roomDeptId.trim()) {
-      setError("All fields are required");
-      setLoading(false);
+    if (!editingCapacity || isNaN(Number(editingCapacity)) || Number(editingCapacity) < 0) {
+      setError("Please enter a valid, non-negative capacity.");
       return;
     }
+    setIsUpdating(true);
     try {
-      await api.post(
-        "/dashboard/super-admin/room",
-        {
-          roomNumber,
-          capacity: Number(roomCapacity),
-          departmentId: Number(roomDeptId),
-        },
-        { withCredentials: true }
-      );
-      setSuccess("Room added successfully!");
-      // Refetch rooms after adding
-      const res = await api.get<Room[]>("/rooms", { withCredentials: true });
-      setRooms(res.data);
-      setRoomNumber("");
-      setRoomCapacity("");
-      setRoomDeptId("");
+      const response = await api.post(`/lab/${labId}/capacity`, { capacity: Number(editingCapacity) });
+      const updatedLab = response.data;
+
+      setLabs(prevLabs => prevLabs.map(lab => lab.id === labId ? { ...lab, capacity: updatedLab.capacity } : lab));
+      setSuccess("Lab capacity updated successfully!");
+      setOpenOptionsLabId(null);
     } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || "Failed to add room");
+      const updateError = err as { response?: { data?: { error?: string } } };
+      setError(updateError.response?.data?.error || 'Failed to update capacity.');
     } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
   };
 
-  // Fetch departments for dropdown
-  const fetchDepartments = async () => {
-    setLoading(true);
+  const handleUpdateStatus = async (labId: number, newStatus: 'AVAILABLE' | 'BOOKED') => {
     setError(null);
+    setSuccess("");
+    setIsUpdating(true);
     try {
-      const response = await api.get<Department[]>('/departments', { withCredentials: true });
-      setDepartments(response.data);
+      const response = await api.post(`/lab/${labId}/status`, { status: newStatus });
+      const updatedlab = response.data;
+      
+      setLabs(prevLabs => prevLabs.map(lab => lab.id === labId ? { ...lab, status: updatedlab.status } : lab));
+      setSuccess(`lab status set to ${newStatus}.`);
     } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      throw new Error(error.response?.data?.error || 'Failed to fetch departments');
+      const updateError = err as { response?: { data?: { error?: string } } };
+      setError(updateError.response?.data?.error || 'Failed to update status.');
     } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
   };
+
 
   useEffect(() => {
-    fetchRooms()
-      .then(setRooms)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-    fetchDepartments();
-  }, []);
+    const fetchAndFilterlabs = async () => {
+      if (!departmentId) {
+        setLabs([]);
+        setLoading(false);
+        return;
+      }
 
-  const filteredRooms = departmentId
-    ? rooms.filter((room) => room.departmentId === departmentId)
-    : rooms;
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.get<Lab[]>("/labs", { params: { departmentId: departmentId }, withCredentials: true });
+        const alllabs = response.data;
+        
+        // The filter logic remains the same, but it's now guaranteed to have a valid ID.
+        const filteredData = alllabs.filter(lab => lab.departmentId === departmentId);
+        setLabs(filteredData);
 
-  if (loading) return <div>Loading rooms...</div>;
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+      } catch (err) {
+        const fetchError = err as { response?: { data?: { error?: string } } };
+        setError(fetchError.response?.data?.error || 'Failed to fetch labs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAndFilterlabs();
+  }, [departmentId]);
+
+  if (loading) return <div>Loading labs...</div>;
+
+  if (!departmentId) {
+    return <div className="text-gray-500 mt-6">Please select a department to see its labs.</div>
+  }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 w-full`}>
-      <h2 className="text-2xl font-bold mb-4">Room List</h2>
-      {success && <div className="text-green-600 mb-2">{success}</div>}
-      {user?.role === "super_admin" && (
-        <div>
-          <button
-            className="btn btn-outline btn-sm mb-4 cursor-pointer custom-bordered-btn"
-            onClick={() => setShowAddForm((v) => !v)}
-          >
-            [+add room]
-          </button>
-        </div>
+    <div className={`p-6 page-bg-light transition-all duration-300 w-full`}>
+      <h2 className="text-2xl font-bold mb-4">Manage labs</h2>
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+      {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">{success}</div>}
+
+      {labs.length === 0 && !loading && (
+         <div className="text-gray-500">No labs found for this department.</div>
       )}
-      {showAddForm && (<form onSubmit={handleAddRoom} className="mb-6 flex max-w-2xl flex-col gap-2">
-        <input
-          type="text"
-          placeholder="Room Number"
-          value={roomNumber}
-          onChange={e => setRoomNumber(e.target.value)}
-          className="input input-bordered w-full"
-          required
-        />
-        <input
-          type="number"
-          placeholder="Capacity"
-          value={roomCapacity}
-          onChange={e => setRoomCapacity(e.target.value)}
-          className="input input-bordered w-full"
-          required
-        />
-        {/* Department Dropdown */}
-        <select
-          value={roomDeptId}
-          onChange={e => setRoomDeptId(e.target.value)}
-          className="input input-bordered w-full form-bg-dark text-white"
-          required
-        >
-          <option value="">Select Department</option>
-          {departments.map((dept) => (
-            <option key={dept.id} value={dept.id}>
-              {dept.name} ({dept.acronym})
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn"
-          disabled={loading}
-        >
-          {loading ? "Adding..." : "Add Room"}
-        </button>
-      </form>)}
-      <div className="grid lg:grid-cols-3 gap-4">
-        {rooms.map((room) => {
-          const optionOpen = openOptionsRoomId === room.id;
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {labs.map((lab) => {
+          const optionOpen = openOptionsLabId === lab.id;
           return (
-            <Card key={room.id} onClick={() => setOpenOptionsRoomId(optionOpen ? null : room.id)} 
-            title="Click to open options" className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-              <CardHeader>
-                <CardTitle>{room.roomNumber}</CardTitle>
-              </CardHeader>
+            <Card key={lab.id} className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
+              <div
+                onClick={() => {
+                  setOpenOptionsLabId(optionOpen ? null : lab.id);
+                  if (!optionOpen) {
+                    setEditingCapacity(String(lab.capacity));
+                    setError(null);
+                    setSuccess("");
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <CardHeader className="flex flex-row justify-between items-center">
+                  <CardTitle>{lab.labNumber}</CardTitle>
+                  <FaEllipsisV className="text-gray-400" />
+                </CardHeader>
+                <CardContent className="flex justify-between py-6 items-center text-sm text-gray-600">
+                  <div className="flex items-center"><FaChair className="mr-2" /> Capacity: {lab.capacity}</div>
+                  <div className={`flex items-center font-semibold ${lab.status === 'AVAILABLE' ? 'text-green-600' : 'text-yellow-600'}`}>
+                    <FaInfoCircle className="mr-2" /> {lab.status}
+                  </div>
+                </CardContent>
+              </div>
               
-              <CardContent className="flex justify-between items-center">
-                <div className="flex items-center text-sm text-gray-500">
-                  <FaChair className="mr-1" /> {room.capacity}
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <FaInfoCircle className="mr-1" /> {room.status}
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <FaBuilding className="mr-1" /> {room.departmentAcronym}
-                </div>
-                <div className="flex flex-col space-y-1 items-start">
-                  {optionOpen && (
-                    <button
-                      onClick={() => handleDeleteRoom(room.id)}
-                      className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
-                    >
-                      <FaTrash className="mr-1" /> Delete
-                    </button>
-                  )}
-                </div>
-                <button className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 cursor-pointer" aria-label="Options">
-                  <FaEllipsisV />
-                </button>
-              </CardContent>
+              {optionOpen && (
+                <CardContent className="border-t pt-4">
+                  <div className="space-y-4">
+                    {/* Capacity Management */}
+                    <div className="space-y-2">
+                      <label htmlFor={`capacity-${lab.id}`} className="text-sm font-medium text-gray-700">Set Capacity</label>
+                      <div className="flex items-center space-x-2">
+                        {/* --- CORRECTED: Standard HTML input element with Tailwind classes --- */}
+                        <input
+                          id={`capacity-${lab.id}`}
+                          type="number"
+                          value={editingCapacity}
+                          onChange={(e) => setEditingCapacity(e.target.value)}
+                          placeholder="e.g., 50"
+                          disabled={isUpdating}
+                          className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                        {/* --- CORRECTED: Standard HTML button element with Tailwind classes --- */}
+                        <button 
+                          onClick={() => handleUpdateCapacity(lab.id)} 
+                          disabled={isUpdating}
+                          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Status Management */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Set Status</label>
+                      <div className="flex items-center space-x-2">
+                        {/* --- CORRECTED: Standard HTML button element with Tailwind classes --- */}
+                        <button
+                          onClick={() => handleUpdateStatus(lab.id, 'AVAILABLE')}
+                          disabled={isUpdating || lab.status === 'AVAILABLE'}
+                          className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          Available
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(lab.id, 'BOOKED')}
+                          disabled={isUpdating || lab.status === 'BOOKED'}
+                          className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          Booked
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
             </Card>
           );
         })}
