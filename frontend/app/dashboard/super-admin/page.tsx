@@ -15,7 +15,7 @@ export default function SuperAdminDashboard() {
   const [loading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeForm, setActiveForm] = useState("showSlidingPage");
+  const [activeForm, setActiveForm] = useState("showManagingPage");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   return (

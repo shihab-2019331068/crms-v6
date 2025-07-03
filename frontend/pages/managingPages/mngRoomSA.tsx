@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaTrash, FaChair, FaBuilding, FaInfoCircle } from 'react-icons/fa';
+import { FaTrash, FaChair, FaBuilding, FaInfoCircle, FaEllipsisV } from 'react-icons/fa';
 
 import {
   Department,
@@ -33,6 +33,7 @@ export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomS
   const [roomCapacity, setRoomCapacity] = useState("");
   const [roomDeptId, setRoomDeptId] = useState("");
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [openOptionsRoomId, setOpenOptionsRoomId] = useState<number | null>(null);
 
   
   const [tableWidth, setTableWidth] = useState(1);
@@ -196,34 +197,43 @@ export default function mngRoomSA({ departmentId, sidebarOpen = true }: mngRoomS
           {loading ? "Adding..." : "Add Room"}
         </button>
       </form>)}
-      <div className="grid lg:grid-cols-4 gap-4">
-        {rooms.map((room) => (
-          <Card key={room.id} className="hover:shadow-lg transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle>{room.roomNumber}</CardTitle>
-            </CardHeader>
-            
-            <CardContent className="flex justify-between items-center">
-              <div className="flex items-center text-sm text-gray-500">
-                <FaChair className="mr-1" /> {room.capacity}
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <FaInfoCircle className="mr-1" /> {room.status}
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <FaBuilding className="mr-1" /> {room.departmentAcronym}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleDeleteRoom(room.id)}
-                  className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
-                >
-                  <FaTrash className="mr-1" /> Delete
+      <div className="grid lg:grid-cols-3 gap-4">
+        {rooms.map((room) => {
+          const optionOpen = openOptionsRoomId === room.id;
+          return (
+            <Card key={room.id} onClick={() => setOpenOptionsRoomId(optionOpen ? null : room.id)} 
+            title="Click to open options" className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+              <CardHeader>
+                <CardTitle>{room.roomNumber}</CardTitle>
+              </CardHeader>
+              
+              <CardContent className="flex justify-between items-center">
+                <div className="flex items-center text-sm text-gray-500">
+                  <FaChair className="mr-1" /> {room.capacity}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <FaInfoCircle className="mr-1" /> {room.status}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <FaBuilding className="mr-1" /> {room.departmentAcronym}
+                </div>
+                <div className="flex flex-col space-y-1 items-start">
+                  {optionOpen && (
+                    <button
+                      onClick={() => handleDeleteRoom(room.id)}
+                      className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                    >
+                      <FaTrash className="mr-1" /> Delete
+                    </button>
+                  )}
+                </div>
+                <button className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 cursor-pointer" aria-label="Options">
+                  <FaEllipsisV />
                 </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

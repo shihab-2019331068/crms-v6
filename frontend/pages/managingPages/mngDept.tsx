@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from "@/services/api";
 import DepartmentManage from "@/components/departmentManage";
-import { FaTrash, FaEdit } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaInfoCircle, FaEllipsisV } from 'react-icons/fa';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
@@ -28,6 +28,7 @@ export default function mngDept({ sidebarOpen = true }: mngDeptProps) {
   const [manageDeptId, setManageDeptId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteDeptId, setDeleteDeptId] = useState<number | null>(null);
+  const [openOptionsDeptId, setOpenOptionsDeptId] = useState<number | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -193,30 +194,45 @@ export default function mngDept({ sidebarOpen = true }: mngDeptProps) {
       )}
 
       <div className="grid lg:grid-cols-4 gap-4">
-        {departments.map((dept) => (
-          <Card key={dept.id} className="hover:shadow-lg transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle>{dept.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-between items-center">
-              <p className="text-sm text-gray-500">{dept.acronym}</p>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleDeleteDepartment(dept.id)}
-                  className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
-                >
-                  <FaTrash className="mr-1" /> Delete
-                </button>
-                <button
-                  onClick={() => setManageDeptId(dept.id)}
-                  className="flex items-center text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
-                >
-                  <FaEdit className="mr-1" /> Manage
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {departments.map((dept) => {
+          const optionOpen = openOptionsDeptId === dept.id;
+          return (
+            <Card key={dept.id} onClick={() => setOpenOptionsDeptId(optionOpen ? null : dept.id)} className="hover:shadow-lg transition-all duration-300 cursor-pointer"
+            title="Click to open options">
+              <CardHeader>
+                <CardTitle>{dept.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex justify-between items-center">
+                <div className="flex items-center text-sm text-gray-500">
+                  <FaInfoCircle className="mr-1" /> 
+                  {dept.acronym || ''}
+                </div>
+                <div className="flex items-center space-x-2">
+                  {optionOpen && (
+                    <div className="flex flex-col space-y-1 items-start">
+                      <button
+                        onClick={() => handleDeleteDepartment(dept.id)}
+                        className="flex items-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                      >
+                        <FaTrash className="mr-1" /> Delete
+                      </button>
+                      <button
+                        onClick={() => setManageDeptId(dept.id)}
+                        className="flex items-center text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
+                      >
+                        <FaEdit className="mr-1" /> Manage
+                      </button>
+                    </div>
+                  )}
+                  
+                  <button className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 cursor-pointer" aria-label="Options">
+                    <FaEllipsisV />
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {showDeleteConfirm && (

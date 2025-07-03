@@ -146,11 +146,10 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
       {/* Filter controls */}
       <div className="flex gap-4 mb-4">
         <div>
-          <label className="mr-2">Role:</label>
           <select
             value={roleFilter}
             onChange={e => setRoleFilter(e.target.value)}
-            className="border px-2 py-1 rounded bg-gray-500"
+            className="border px-2 py-1 rounded sidebar-light"
           >
             <option value="">Select Role</option>
             <option value="super_admin">Super Admin</option>
@@ -160,13 +159,12 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
           </select>
         </div>
         <div>
-          <label className="mr-2">Department:</label>
           <select
             value={departmentFilter}
             onChange={e => setDepartmentFilter(e.target.value)}
-            className="border px-2 py-1 rounded bg-gray-500"
+            className="border px-2 py-1 rounded sidebar-light"
           >
-            <option value="all">All</option>
+            <option value="all">All Departments</option>
             {departments.map(dep => (
               <option key={dep.id} value={dep.acronym}>
                 {dep.name}
