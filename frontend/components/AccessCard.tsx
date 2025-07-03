@@ -10,22 +10,22 @@ interface AccessCardProps {
 }
 
 const accessDetails: { [key: string]: { title: string; description: string; link: string } } = {
-  manageDepartment: {
+  manageDepartmentSA: {
     title: 'Manage Departments',
     description: 'Create, edit, and delete departments.',
     link: '/dashboard/managing/departments'
   },
-  manageRooms: {
+  manageRoomsSA: {
     title: 'Manage Rooms',
     description: 'Add, edit, and remove rooms.',
     link: '/dashboard/managing/rooms'
   },
-  manageLabs: {
+  manageLabsSA: {
     title: 'Manage Labs',
     description: 'Add, edit, and remove labs.',
     link: '/dashboard/managing/labs'
   },
-  manageUsers: {
+  manageUsersSA: {
     title: 'Manage Users',
     description: 'Add, edit, and remove users.',
     link: '/dashboard/managing/users'
@@ -33,6 +33,41 @@ const accessDetails: { [key: string]: { title: string; description: string; link
   manageAccess: {
     title: 'Manage Access',
     description: 'Add, edit, and remove user accesses.',
+    link: '/dashboard/managing/users'
+  },
+  manageRoom: {
+    title: 'Manage Room',
+    description: 'Manage Department Rooms.',
+    link: '/dashboard/managing/users'
+  },
+  manageLab: {
+    title: 'Manage Lab',
+    description: 'Manage Department Labs.',
+    link: '/dashboard/managing/users'
+  },
+  manageCourse: {
+    title: 'Manage Course',
+    description: 'Manage Department Courses.',
+    link: '/dashboard/managing/users'
+  },
+  manageSemester: {
+    title: 'Manage Semester',
+    description: 'Manage Department Semesters.',
+    link: '/dashboard/managing/users'
+  },
+  manageRoutine: {
+    title: 'Manage Routine',
+    description: 'Manage Department Routines.',
+    link: '/dashboard/managing/users'
+  },
+  manageTeacher: {
+    title: 'Manage Teacher',
+    description: 'Manage Department Teachers.',
+    link: '/dashboard/managing/users'
+  },
+  manageStudent: {
+    title: 'Manage Student',
+    description: 'Manage Department Students.',
     link: '/dashboard/managing/users'
   }
 };
@@ -46,7 +81,7 @@ const AccessCard: React.FC<AccessCardProps> = ({ access, onClick }) => {
 
   return (
     <Card
-      className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      className="hover:shadow-lg transition-shadow duration-200 sidebar-light cursor-pointer"
       onClick={() => onClick && onClick(access)}
     >
       <CardHeader>

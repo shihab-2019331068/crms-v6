@@ -33,3 +33,74 @@ exports.getTeachers = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
+exports.updateRoomCapacity = async (req, res) => {
+  try {
+    const roomId = Number(req.params.roomId);
+    const { capacity } = req.body;
+    
+    // --- Validation ---
+    if (isNaN(roomId)) {
+      return res.status(400).json({ error: 'Room ID must be a number.' });
+    }
+    if (capacity === undefined || isNaN(Number(capacity)) || Number(capacity) < 0) {
+      return res.status(400).json({ error: 'A valid, non-negative capacity is required.' });
+    }
+    
+    const updatedRoom = await prisma.room.update({
+      where: {
+        id: roomId,
+      },
+      data: {
+        capacity: Number(capacity),
+      },
+    });
+
+    res.status(200).json(updatedRoom);
+  } catch (error) {
+    // Prisma's 'Record to update not found' error.
+    // This is perfect for handling cases where the room doesn't exist
+    // OR the admin doesn't have permission to edit it.
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Room not found or you do not have permission to edit it.' });
+    }
+    // Generic error
+    res.status(500).json({ error: 'An error occurred while updating the room capacity.' });
+  }
+};
+
+
+exports.updateRoomStatus = async (req, res) => {
+  try {
+    const roomId = Number(req.params.roomId);
+    const { status } = req.body;
+
+    // --- Validation ---
+    if (isNaN(roomId)) {
+      return res.status(400).json({ error: 'Room ID must be a number.' });
+    }
+    // Validate that the status is one of the allowed enum values
+    if (!status || !['AVAILABLE', 'BOOKED'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be "AVAILABLE" or "BOOKED".' });
+    }
+    
+    // Same security pattern as above: update only if ID and departmentId match.
+    const updatedRoom = await prisma.room.update({
+      where: {
+        id: roomId,
+      },
+      data: {
+        status: status, // Prisma will validate this against the `RoomStatus` enum
+      },
+    });
+
+    res.status(200).json(updatedRoom);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Room not found or you do not have permission to edit it.' });
+    }
+    // Generic error
+    res.status(500).json({ error: 'An error occurred while updating the room status.' });
+  }
+};

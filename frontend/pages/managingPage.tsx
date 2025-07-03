@@ -9,6 +9,16 @@ import ManageRoomSA from './managingPages/mngRoomSA';
 import ManageLabSA from './managingPages/mngLabSA';
 import ManageUser from './managingPages/mngUser';
 import ManageAccess from './managingPages/mngAccess';
+import ManageRoom from './managingPages/mngRoom';
+import ManageLab from './managingPages/mngLab';
+import ManageCourse from './managingPages/mngCourse';
+import ManageSemester from './managingPages/mngSemester';
+import ManageRoutine from './managingPages/mngRoutine';
+import ManageTeacher from './managingPages/mngTeacher';
+import ManageStudent from './managingPages/mngStudent';
+
+
+
 
 interface ManagingPageProps {
   sidebarOpen?: boolean
@@ -18,49 +28,90 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
   const { user } = useAuth();
   const [accesses, setAccesses] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [deptId, setDeptId] = useState<number>(1);
+  
+  // Change 1: Initialize deptId to null and add a loading state
+  const [deptId, setDeptId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserAccesses = async () => {
-      if (user?.email) {
-        try {
-          const response = await api.get(`/user/${user.email}`);
-          setAccesses(response.data.accesses || []);
-          setDeptId(response.data.departmentId);
-        } catch (error) {
-          console.error('Failed to fetch user accesses', error);
-        }
+      // Don't do anything if we don't have a user object yet
+      if (!user?.email) {
+        setLoading(false); // No user, stop loading
+        return;
+      }
+
+      try {
+        setLoading(true); // Start loading when fetch begins
+        const response = await api.get(`/user/${user.email}`);
+        setAccesses(response.data.accesses || []);
+        setDeptId(response.data.departmentId);
+      } catch (error) {
+        console.error('Failed to fetch user accesses', error);
+      } finally {
+        setLoading(false); // Stop loading when fetch is done (success or fail)
       }
     };
 
     fetchUserAccesses();
-  }, [user]);
+  }, [user]); // Dependency on `user` is correct
 
   const handleCardClick = (access: string) => {
     setActiveForm(access);
   };
 
   const renderActiveForm = () => {
+    // Change 2: Handle the case where deptId is needed but not yet loaded
+    // SA forms don't need a deptId, so they can be rendered anytime
+    const needsDeptId = [
+      'manageAccess', 'manageRoom', 'manageLab', 'manageCourse',
+      'manageSemester', 'manageRoutine', 'manageTeacher', 'manageStudent'
+    ].includes(activeForm || '');
+
+    // If a form needs a deptId but we don't have one yet, show a message.
+    if (needsDeptId && deptId === null) {
+      return <div>Could not determine department. User may not be assigned one.</div>;
+    }
+    
     switch (activeForm) {
-      case 'manageDepartment':
+      case 'manageDepartmentSA':
         return <ManageDept />;
-      case 'manageRooms':
+      case 'manageRoomsSA':
         return <ManageRoomSA />;
-      case 'manageLabs':
+      case 'manageLabsSA':
         return <ManageLabSA />;
-      case 'manageUsers':
+      case 'manageUsersSA':
         return <ManageUser />;
+      // Now we can be sure deptId is a number when we reach these cases
       case 'manageAccess':
-        return <ManageAccess deptId={deptId} />;
+        return <ManageAccess deptId={deptId!} />;
+      case 'manageRoom':
+        return <ManageRoom departmentId={deptId!} />;
+      case 'manageLab':
+        return <ManageLab deptId={deptId!} />;
+      case 'manageCourse':
+        return <ManageCourse deptId={deptId!} />;
+      case 'manageSemester':
+        return <ManageSemester deptId={deptId!} />;
+      case 'manageRoutine':
+        return <ManageRoutine deptId={deptId!} />;
+      case 'manageTeacher':
+        return <ManageTeacher deptId={deptId!} />;
+      case 'manageStudent':
+        return <ManageStudent deptId={deptId!} />;
       default:
-        return (
-            <div >
-            </div>
-        );
+        return null;
     }
   };
 
-  console.log("Access:", accesses, deptId);
+  // Change 3: Show a global loading indicator while fetching user data
+  if (loading) {
+    return (
+      <div className={`min-h-screen p-6`}>
+        Loading Management Data...
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${ sidebarOpen ? "w-316" : "w-364" }`}>

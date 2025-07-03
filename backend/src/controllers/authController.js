@@ -41,7 +41,7 @@ const signup = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, 10);
     let accesses = [];
     if (role === 'super_admin') {
-      accesses = ['manageDepartment', 'manageRooms', 'manageLabs', 'manageUsers'];
+      accesses = ['manageDepartmentSA', 'manageRoomsSA', 'manageLabsSA', 'manageUsersSA'];
     }
     // Pass session to createUser
     const user = await createUser(name, email, passwordHash, role, departmentId, session, accesses);
