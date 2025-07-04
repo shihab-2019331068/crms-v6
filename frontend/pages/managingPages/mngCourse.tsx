@@ -215,7 +215,7 @@ const MainDashboard: React.FC<{ setView: (view: View) => void }> = ({ setView })
 );
 
 const DashboardCard: React.FC<{ title: string; description: string; icon: string; onClick: () => void; }> = ({ title, description, icon, onClick }) => (
-    <div onClick={onClick} className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 cursor-pointer transform hover:-translate-y-1">
+    <div onClick={onClick} className="p-8 rounded-lg shadow-md transition-transform transform hover:scale-105 semester-btn flex flex-col items-center justify-center">
         <div className="card-body items-center text-center">
             <span className="text-6xl mb-4">{icon}</span>
             <h2 className="card-title text-2xl">{title}</h2>

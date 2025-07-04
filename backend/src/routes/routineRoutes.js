@@ -1,20 +1,27 @@
+// --- START OF FILE routineRoutes.js ---
 const express = require('express');
 const router = express.Router();
 const routineController = require('../controllers/routineController');
 
-// Get weekly schedule by room
+// Get weekly schedule by room, semester, teacher, course
 router.get('/routine/room/:roomId', routineController.getByRoom);
-// Get weekly schedule by semester
 router.get('/routine/semester/:semesterId', routineController.getBySemester);
-// Get weekly schedule by teacher
 router.get('/routine/teacher/:teacherId', routineController.getByTeacher);
-// Get weekly schedule by course
 router.get('/routine/course/:courseId', routineController.getByCourse);
+
+// --- CORE WORKFLOW ROUTES ---
 // Preview generated weekly routine for a department (does not save to DB)
 router.post('/routine/preview', routineController.previewWeeklyRoutine);
-// Get final routine for a department (read-only)
-router.get('/routine/final', routineController.getFinalRoutine);
-// Save finalized weekly routine
+// Save a finalized weekly routine (replaces existing for that semester)
 router.post('/routine/generate', routineController.generateWeeklyRoutine);
+// Get final routine for a department (read-only, populated with details)
+router.get('/routine/final', routineController.getFinalRoutine);
+
+// --- MANUAL MANAGEMENT ROUTES ---
+// Add a single manual entry to the schedule
+router.post('/routine/entry', routineController.addWeeklyScheduleEntry);
+// Delete a single entry from the schedule
+router.delete('/routine/entry/:entryId', routineController.deleteWeeklyScheduleEntry);
+
 
 module.exports = router;

@@ -28,13 +28,6 @@ router.post(
   semesterController.addSemester
 );
 
-// Add new weekly schedule (Department Admin only)
-router.post(
-  '/dashboard/department-admin/weekly-schedule',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  routineController.addWeeklySchedule
-);
 
 // Add course to semester (Department Admin only)
 router.post(
@@ -60,13 +53,6 @@ router.get(
   semesterController.getSemesters
 );
 
-// Get all weekly schedules for department admin
-router.get(
-  '/dashboard/department-admin/weekly-schedules',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  routineController.getWeeklySchedules
-);
 
 // Get all rooms for department admin
 router.get(

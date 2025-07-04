@@ -333,7 +333,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                   className="bg-black text-white"
                 >
                   {semesterNameOptions.map((name) => (
-                    <SelectItem key={name} value={name}>
+                    <SelectItem key={name} value={name} className="hover:bg-gray-800">
                       {name}
                     </SelectItem>
                   ))}
