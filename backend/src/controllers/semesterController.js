@@ -116,6 +116,53 @@ exports.addCourseToSemester = async (req, res) => {
   }
 };
 
+exports.getSemesterCourses = async (req, res) => {
+  const { semesterId } = req.params;
+  
+  if (!semesterId) {
+    return res.status(400).json({ error: 'Semester ID is required' });
+  }
+  
+  try {
+    const coursesInSemester = await prisma.course.findMany({
+      where: {
+        // Find courses that are part of the given semester
+        semesters: {
+          some: {
+            id: parseInt(semesterId),
+          },
+        },
+      },
+      // For each course found, include its teacher assignment details
+      include: {
+        // This is the relation from the Course model
+        semesterCourseTeachers: {
+          // IMPORTANT: Only include the assignment for the CURRENT semester
+          where: {
+            semesterId: parseInt(semesterId),
+          },
+          // And include the teacher's name from that assignment
+          include: {
+            teacher: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+          name: 'asc' // Optional: sort courses alphabetically
+      }
+    });
+
+    res.json(coursesInSemester);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch semester courses' });
+  }
+// }
+}
+
 // Department Admin: Remove Course from a Semester
 exports.removeCourseFromSemester = async (req, res) => {
   const { semesterId, courseId } = req.params;
@@ -159,7 +206,14 @@ exports.assignTeacherToCourse = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(400).json({ error: 'This course already has a teacher assigned for this semester.' });
+      // remove the previous assignment
+      await prisma.semesterCourseTeacher.delete({
+        where: {
+          id: existing.id,
+        },
+      });
+
+      // return res.status(400).json({ error: 'This course already has a teacher assigned for this semester.' });
     }
 
     // Create the assignment

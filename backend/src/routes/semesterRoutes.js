@@ -28,4 +28,11 @@ router.post(
   semesterController.assignTeacherToCourse
 );
 
+router.get(
+  '/get-semester-courses/:semesterId',
+  authenticateToken,
+  authorizeRoles('department_admin', 'teacher'),
+  semesterController.getSemesterCourses
+);
+
 module.exports = router;

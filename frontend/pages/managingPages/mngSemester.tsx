@@ -26,6 +26,16 @@ for (let year = 1; year <= 4; year++) {
 }
 
 
+interface SemesterCourse {
+  id: number;
+  name: string;
+  semesterCourseTeachers: {
+    teacher: {
+      name: string;
+    };
+  }[];
+}
+
 export interface Semester {
   id: number;
   name: string;
@@ -64,7 +74,9 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const [addCourseError, setAddCourseError] = useState("");
   const [addCourseSuccess, setAddCourseSuccess] = useState("");
   const [courses, setCourses] = useState<{ id: number; name: string; semesterId?: number | null }[]>([]);
-  const [semesterCourses, setSemesterCourses] = useState<{ [semesterId: number]: { id: number; name: string }[] }>({});
+  // === START OF UPDATED PART ===
+  const [semesterCourses, setSemesterCourses] = useState<{ [semesterId: number]: SemesterCourse[] }>({});
+  // === END OF UPDATED PART ===
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesError, setCoursesError] = useState("");
   const [sessionInput, setSessionInput] = useState("");
@@ -74,6 +86,15 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const [removeCourseLoading, setRemoveCourseLoading] = useState(false);
   const [removeCourseError, setRemoveCourseError] = useState("");
   const [removeCourseSuccess, setRemoveCourseSuccess] = useState("");
+  // === START OF UPDATED PART ===
+  // --- Teacher Assignment State ---
+  const [teachers, setTeachers] = useState<{ id: number; name: string }[]>([]);
+  const [assigningTeacherToCourseId, setAssigningTeacherToCourseId] = useState<number | null>(null);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+  const [assignTeacherLoading, setAssignTeacherLoading] = useState(false);
+  const [assignTeacherError, setAssignTeacherError] = useState("");
+  const [assignTeacherSuccess, setAssignTeacherSuccess] = useState("");
+  // === END OF UPDATED PART ===
 
   // --- Data Fetching ---
 
@@ -98,13 +119,14 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const fetchCourses = async () => {
     if (!departmentId) return;
     try {
-      const res = await api.get("/dashboard/department-admin/courses", {
+      const res = await api.get("/courses", {
         params: { departmentId },
         withCredentials: true,
       });
       // Assuming 'forDept' is a valid field on your course model
       const filteredCourses = res.data.filter((course: { forDept: number }) => course.forDept === departmentId);
       setCourses(filteredCourses);
+      console.log("Filtered Courses:", filteredCourses);
     } catch {
       setCourses([]);
     }
@@ -114,7 +136,8 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
     setCoursesLoading(true);
     setCoursesError("");
     try {
-      const res = await api.get(`/dashboard/department-admin/semester/${semesterId}/courses`, { withCredentials: true });
+      // Assumes the API returns course objects with an optional teacher object: { id, name, teacher: { name } | null }
+      const res = await api.get(`/get-semester-courses/${semesterId}`, { withCredentials: true });
       setSemesterCourses(prev => ({ ...prev, [semesterId]: res.data }));
     } catch {
       setCoursesError("Failed to fetch courses for this semester");
@@ -122,6 +145,23 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
       setCoursesLoading(false);
     }
   };
+
+  // === START OF UPDATED PART ===
+  const fetchTeachers = async () => {
+    if (!departmentId) return;
+    try {
+      // Assuming an endpoint to fetch teachers by department
+      const res = await api.get(`/dashboard/department-admin/teachers`, {
+        params: { departmentId },
+        withCredentials: true,
+      });
+      setTeachers(res.data);
+    } catch {
+      setAssignTeacherError("Failed to fetch teachers.");
+      setTeachers([]);
+    }
+  };
+  // === END OF UPDATED PART ===
   
   useEffect(() => {
     if (currentView === 'manage') {
@@ -217,6 +257,36 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
     }
   };
 
+  // === START OF UPDATED PART ===
+  const handleAssignTeacherToCourse = async (semesterId: number, courseId: number) => {
+    if (!selectedTeacherId) {
+      setAssignTeacherError("Please select a teacher.");
+      return;
+    }
+    setAssignTeacherLoading(true);
+    setAssignTeacherError("");
+    setAssignTeacherSuccess("");
+    try {
+      // This uses the route provided in semesterRoutes.js
+      await api.post("/add-semesterCourseTeacher", {
+        semesterId,
+        courseId,
+        teacherId: selectedTeacherId,
+      }, { withCredentials: true });
+      setAssignTeacherSuccess("Teacher assigned successfully!");
+      // Reset state and refresh course list
+      setAssigningTeacherToCourseId(null);
+      setSelectedTeacherId(null);
+      fetchSemesterCourses(semesterId); // Refresh the list to show the new teacher
+    } catch (err: any) {
+      setAssignTeacherError(err.response?.data?.error || "Failed to assign teacher.");
+    } finally {
+      setAssignTeacherLoading(false);
+      setTimeout(() => setAssignTeacherSuccess(""), 4000);
+    }
+  };
+  // === END OF UPDATED PART ===
+
   // --- Render Functions for Views ---
 
   const renderMainView = () => (
@@ -259,7 +329,6 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                 <SelectTrigger id="semesterName">
                   <SelectValue placeholder="Select a semester" />
                 </SelectTrigger>
-                {/* === THIS IS THE UPDATED PART === */}
                 <SelectContent 
                   className="bg-black text-white"
                 >
@@ -269,7 +338,6 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                     </SelectItem>
                   ))}
                 </SelectContent>
-                {/* === END OF UPDATED PART === */}
               </Select>
             </div>
             <div>
@@ -304,7 +372,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
       <h2 className="text-xl font-bold mb-4">Manage Semesters</h2>
       {loading && <p>Loading semesters...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {semesters.map((semester) => (
           <Card 
             key={semester.id} 
@@ -350,26 +418,79 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                         <FaPlus className="mr-2"/>{showAddCourseFormId === semester.id ? "Cancel" : "Add"} Courses
                      </Button>
                   </div>
-                  {/* --- Show Courses View --- */}
+                  
+                  {/* === START OF UPDATED PART: SHOW COURSES VIEW === */}
                   {showCoursesSemesterId === semester.id && (
-                     <div onClick={(e) => e.stopPropagation()} className="p-2 border rounded-md bg-background">
-                       {coursesLoading ? <p>Loading...</p> : coursesError ? <p className="text-red-500 text-xs">{coursesError}</p> : (
-                         <ul className="space-y-2">
-                           {(semesterCourses[semester.id] || []).length === 0 ? <li className="text-xs">No courses found.</li> :
-                           semesterCourses[semester.id].map(course => (
-                             <li key={course.id} className="flex items-center justify-between text-sm">
-                               <span>{course.name}</span>
-                               <Button variant="ghost" size="sm" onClick={() => handleRemoveCourseFromSemester(semester.id, course.id)} disabled={removeCourseLoading}>
-                                 <FaTrash className="text-red-500"/>
-                               </Button>
-                             </li>
-                           ))}
-                         </ul>
-                       )}
-                       {removeCourseSuccess && <p className="text-green-600 text-xs mt-2">{removeCourseSuccess}</p>}
-                       {removeCourseError && <p className="text-red-500 text-xs mt-2">{removeCourseError}</p>}
-                     </div>
+                    <div onClick={(e) => e.stopPropagation()} className="p-2 border rounded-md bg-background min-w-[450px]">
+                      <h4 className="font-semibold mb-2 text-md">Courses in Semester</h4>
+                      {coursesLoading ? <p className="text-sm">Loading...</p> : coursesError ? <p className="text-red-500 text-xs">{coursesError}</p> : (
+                        <div className="space-y-2">
+                          {(semesterCourses[semester.id] || []).length > 0 && (
+                            <div className="grid grid-cols-10 gap-2 font-bold text-sm text-muted-foreground pb-1 border-b">
+                              <span className="col-span-4">Course</span>
+                              <span className="col-span-3">Teacher</span>
+                              <span className="col-span-3">Actions</span>
+                            </div>
+                          )}
+                          {(semesterCourses[semester.id] || []).length === 0 ? <div className="text-xs text-center py-2">No courses assigned.</div> :
+                            semesterCourses[semester.id].map(course => (
+                              <div key={course.id}>
+                                <div className="grid grid-cols-10 gap-2 items-center text-sm pt-2">
+                                  {assigningTeacherToCourseId === course.id ? (
+                                    <>
+                                      <span className="col-span-4 truncate" title={course.name}>{course.name}</span>
+                                      <div className="col-span-6 flex items-center gap-1">
+                                        <Select onValueChange={(value) => setSelectedTeacherId(Number(value))}>
+                                          <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue placeholder="Select Teacher" />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-black text-white">
+                                            {teachers.length > 0 ? teachers.map(teacher => (
+                                              <SelectItem key={teacher.id} value={String(teacher.id)} className="hover:bg-gray-800">
+                                                {teacher.name}
+                                              </SelectItem>
+                                            )) : <SelectItem value="no-teachers" disabled>No teachers</SelectItem>}
+                                          </SelectContent>
+                                        </Select>
+                                        <Button size="sm" onClick={() => handleAssignTeacherToCourse(semester.id, course.id)} disabled={assignTeacherLoading || !selectedTeacherId} className="h-8 cursor-pointer hover:underline">
+                                          {assignTeacherLoading ? '...' : 'Save'}
+                                        </Button>
+                                        <Button variant="ghost" size="sm" onClick={() => { setAssigningTeacherToCourseId(null); setSelectedTeacherId(null); setAssignTeacherError(""); }} className="h-8 cursor-pointer hover:underline">
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="col-span-4 truncate" title={course.name}>{course.name}</span>
+                                      <span className="col-span-3 truncate">
+                                        {course.semesterCourseTeachers?.[0]?.teacher?.name || <span className="text-muted-foreground italic">Unassigned</span>}
+                                      </span>
+                                      <div className="col-span-3 flex items-center">
+                                        {/* This is the key change for the button text */}
+                                        <Button variant="outline" size="sm" onClick={() => { setAssigningTeacherToCourseId(course.id); setAssignTeacherError(""); setAssignTeacherSuccess(""); setSelectedTeacherId(null); fetchTeachers(); }} className="text-xs h-8">
+                                          {course.semesterCourseTeachers?.length > 0 ? 'Change' : 'Assign'}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveCourseFromSemester(semester.id, course.id)} disabled={removeCourseLoading} className="ml-1 h-8 w-8 hover:bg-red-100 group">
+                                            <FaTrash className="text-red-500 h-3.5 w-3.5"/>
+                                        </Button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                {assigningTeacherToCourseId === course.id && assignTeacherError && <p className="text-red-500 text-xs mt-1 col-start-5 col-span-6">{assignTeacherError}</p>}
+                              </div>
+                            ))
+                          }
+                          {assignTeacherSuccess && <p className="text-green-600 text-xs mt-2">{assignTeacherSuccess}</p>}
+                          {removeCourseSuccess && <p className="text-green-600 text-xs mt-2">{removeCourseSuccess}</p>}
+                          {removeCourseError && <p className="text-red-500 text-xs mt-2">{removeCourseError}</p>}
+                        </div>
+                      )}
+                    </div>
                   )}
+                  {/* === END OF UPDATED PART === */}
+
                   {/* --- Add Course Form --- */}
                   {showAddCourseFormId === semester.id && (
                     <form onClick={(e) => e.stopPropagation()} className="p-2 border rounded-md bg-background space-y-2" onSubmit={(e) => handleAddCourseToSemester(e, semester.id)}>
