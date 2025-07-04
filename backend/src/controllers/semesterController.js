@@ -126,14 +126,57 @@ exports.removeCourseFromSemester = async (req, res) => {
     }
 
     await prisma.course.update({
-        where: { id: Number(courseId) },
-        data: {
-            semesterId: null,
+      where: { id: Number(courseId) },
+      data: {
+        semesters: {
+          disconnect: { id: Number(semesterId) }, // 👈 this removes the link in the join table
         },
+      },
     });
 
     res.status(200).json({ message: 'Course removed from semester successfully.' });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+exports.assignTeacherToCourse = async (req, res) => {
+  const { semesterId, courseId, teacherId } = req.body;
+
+  try {
+    if (!semesterId || !courseId || !teacherId) {
+      return res.status(400).json({ error: 'semesterId, courseId, and teacherId are required.' });
+    }
+
+    // Optional: Check if the relation already exists to prevent duplicates
+    const existing = await prisma.semesterCourseTeacher.findUnique({
+      where: {
+        semesterId_courseId: {
+          semesterId: Number(semesterId),
+          courseId: Number(courseId),
+        },
+      },
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: 'This course already has a teacher assigned for this semester.' });
+    }
+
+    // Create the assignment
+    const assignment = await prisma.semesterCourseTeacher.create({
+      data: {
+        semester: { connect: { id: Number(semesterId) } },
+        course:   { connect: { id: Number(courseId) } },
+        teacher:  { connect: { id: Number(teacherId) } },
+      },
+    });
+
+    res.status(201).json({
+      message: 'Teacher assigned to course successfully.',
+      assignment,
+    });
+  } catch (error) {
+    console.error('Error assigning teacher to course:', error);
+    res.status(500).json({ error: 'Internal server error.' });
   }
 };

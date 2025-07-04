@@ -21,4 +21,11 @@ router.post(
 //   semesterController.deleteSemester
 // );
 
+router.post(
+  '/add-semesterCourseTeacher',
+  authenticateToken,
+  authorizeRoles('department_admin', 'teacher'),
+  semesterController.assignTeacherToCourse
+);
+
 module.exports = router;

@@ -382,7 +382,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                            </label>
                          ))}
                       </div>
-                      <Button type="submit" size="sm" disabled={addCourseLoading || addCourseIds.length === 0}>
+                      <Button type="submit" size="sm" className="w-full border cursor-pointer" disabled={addCourseLoading || addCourseIds.length === 0}>
                         {addCourseLoading ? "Adding..." : "Add Selected"}
                       </Button>
                       {addCourseSuccess && <p className="text-green-600 text-xs mt-2">{addCourseSuccess}</p>}
