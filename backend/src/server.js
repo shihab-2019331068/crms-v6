@@ -13,6 +13,7 @@ const generalRoutes = require('./routes/generalRoutes');
 const routineRoutes = require('./routes/routineRoutes');
 const labRoutes = require('./routes/labRoutes');
 const roomRoutes = require('./routes/roomRoutes');
+const semesterRoutes = require('./routes/semesterRoutes');
 const accessRoutes = require('./routes/accessRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -35,6 +36,8 @@ app.use('/api', routineRoutes);
 app.use('/api', accessRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', labRoutes);
+app.use('/api', semesterRoutes);
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT;

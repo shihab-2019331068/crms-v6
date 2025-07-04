@@ -92,7 +92,7 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
       case 'manageCourse':
         return <ManageCourse deptId={deptId!} />;
       case 'manageSemester':
-        return <ManageSemester deptId={deptId!} />;
+        return <ManageSemester departmentId={deptId!} />;
       case 'manageRoutine':
         return <ManageRoutine deptId={deptId!} />;
       case 'manageTeacher':

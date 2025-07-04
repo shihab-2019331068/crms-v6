@@ -3,11 +3,11 @@ const prisma = new PrismaClient();
 
 // Department Admin: Add Semester (must specify department, only for own department)
 exports.addSemester = async (req, res) => {
-  const { name, session, startDate, endDate, examStartDate, examEndDate, departmentId } = req.body;
+  const { name, session, departmentId } = req.body;
   const user = req.user;
   try {
     // Validate required fields
-    if (!name || !session || !startDate || !endDate || !examStartDate || !examEndDate || !departmentId) {
+    if (!name || !session || !departmentId) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
     // Fetch the admin's user record
@@ -25,10 +25,6 @@ exports.addSemester = async (req, res) => {
       data: {
         name,
         session,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        examStartDate: new Date(examStartDate),
-        examEndDate: new Date(examEndDate),
         departmentId
       },
     });

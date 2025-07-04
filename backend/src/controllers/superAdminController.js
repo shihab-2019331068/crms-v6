@@ -11,24 +11,6 @@ exports.addDepartment = async (req, res) => {
       },
     });
 
-    // Create 8 semesters for the new department
-    const semesterNames = [
-      '1st year 1st semester',
-      '1st year 2nd semester',
-      '2nd year 1st semester',
-      '2nd year 2nd semester',
-      '3rd year 1st semester',
-      '3rd year 2nd semester',
-      '4th year 1st semester',
-      '4th year 2nd semester',
-    ];
-    const semestersData = semesterNames.map((name) => ({
-      name,
-      session: null, // session is optional and can be edited later
-      departmentId: department.id,
-    }));
-    await prisma.semester.createMany({ data: semestersData });
-
     res.status(201).json(department);
   } catch (error) {
     res.status(400).json({ error: error.message });

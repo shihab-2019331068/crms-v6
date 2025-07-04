@@ -57,6 +57,17 @@ body {
   background-color: #FFFFFF;
 }
 
+.semester-btn {
+  background-color: #F9F9F9 !important;
+}
+
+.semester-btn:hover,
+.semester-btn:focus {
+  background-color: #EAEAEA !important;
+}
+
+
+
 .sb-btn {
   background-color: #F9F9F9 !important;
   color: #181818;
