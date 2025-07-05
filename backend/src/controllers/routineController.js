@@ -314,3 +314,70 @@ exports.deleteWeeklyScheduleEntry = async (req, res) => {
         res.status(500).json({ error: "Failed to delete entry." });
     }
 };
+
+
+// Get a specific student's weekly routine
+exports.getStudentRoutine = async (req, res) => {
+  const { studentId } = req.params;
+
+  
+  
+  try {
+    // 1. Find the student to get their session and department.
+    const student = await prisma.user.findUnique({
+      where: { id: Number(studentId) },
+      select: { session: true, departmentId: true, name: true, role: true }
+    });
+    
+    if (!student || student.role !== 'student') {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+    if (!student.session || !student.departmentId) {
+      return res.status(404).json({ error: 'Student not assigned to a session or department.' });
+    }
+    
+    // 2. Find the student's current semester based on their session and department.
+    const semester = await prisma.semester.findFirst({
+      where: {
+        session: student.session,
+        departmentId: student.departmentId,
+      },
+      select: { id: true, name: true, session: true }
+    });
+
+    if (!semester) {
+      return res.status(404).json({ routine: [], message: 'Could not determine your current semester.' });
+    }
+
+    // 3. Find all courses the student is enrolled in.
+    const enrollments = await prisma.enrollment.findMany({
+      where: { studentId: Number(studentId) },
+      select: { courseId: true }
+    });
+    const enrolledCourseIds = enrollments.map(e => e.courseId);
+
+    // 4. Get the weekly schedule for the semester, including the student's courses and any breaks.
+    const routine = await prisma.weeklySchedule.findMany({
+      where: {
+        semesterId: semester.id,
+        OR: [
+            { courseId: { in: enrolledCourseIds } },
+            { isBreak: true }
+        ]
+      },
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+      include: {
+        course: { select: { code: true, name: true } },
+        teacher: { select: { name: true } },
+        room: { select: { roomNumber: true } },
+        lab: { select: { labNumber: true } }
+      }
+    });
+
+    res.status(200).json({ routine, student, semester });
+
+  } catch (error) {
+    console.error("Error fetching student routine:", error);
+    res.status(500).json({ error: 'Failed to fetch student routine.' });
+  }
+};

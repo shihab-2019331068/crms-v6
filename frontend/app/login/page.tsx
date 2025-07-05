@@ -1,12 +1,23 @@
-// login.tsx - Login page (to be implemented)
+// app/(auth)/login/page.tsx
 
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useAuth } from "@/context/AuthContext";
 import AuthForm from "@/components/AuthForm";
 import api from "@/services/api";
-import { isValidEmail, isNonEmpty } from "@/utils/validators";
-import { useAuth } from "@/context/AuthContext";
+
+// 1. Define the validation schema with Zod
+const LoginSchema = z.object({
+  email: z.string().email({ message: "Invalid email address." }),
+  password: z.string().min(1, { message: "Password is required." }),
+});
+
+// Infer the TypeScript type from the schema
+export type LoginSchemaType = z.infer<typeof LoginSchema>;
 
 interface AxiosError {
   response?: { data?: { message?: string } };
@@ -14,45 +25,60 @@ interface AxiosError {
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
   const router = useRouter();
   const { login } = useAuth();
 
-  async function handleLogin(data: { email: string; password: string }) {
-    setError("");
-    if (!isNonEmpty(data.email) || !isNonEmpty(data.password)) {
-      setError("All fields are required.");
-      return;
-    }
-    if (!isValidEmail(data.email)) {
-      setError("Invalid email address.");
-      return;
-    }
+  // 2. Setup react-hook-form
+  const form = useForm<LoginSchemaType>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  // 3. The submission handler receives validated data
+  async function handleLogin(data: LoginSchemaType) {
+    setServerError("");
     setLoading(true);
     try {
-      // Send credentials (cookies) with the request
       const res = await api.post("/login", data, { withCredentials: true });
       const { role, email } = res.data;
-      login({ role, email }); // Only pass role and email
+      login({ role, email });
 
-      if (role === "student") router.push("/dashboard/student");
-      else if (role === "teacher") router.push("/dashboard/teacher");
-      else if (role === "department_admin") router.push("/dashboard/department-admin");
-      else if (role === "super_admin") router.push("/dashboard/super-admin");
-      else router.push("/");
+      // Use a switch statement for cleaner redirection
+      switch (role) {
+        case "student":
+          router.push("/dashboard/student");
+          break;
+        case "teacher":
+          router.push("/dashboard/teacher");
+          break;
+        case "department_admin":
+          router.push("/dashboard/department-admin");
+          break;
+        case "super_admin":
+          router.push("/dashboard/super-admin");
+          break;
+        default:
+          router.push("/");
+          break;
+      }
     } catch (err) {
       const axiosErr = err as AxiosError;
-      setError(axiosErr?.response?.data?.message || "Login failed");
+      setServerError(axiosErr?.response?.data?.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background text-foreground">
-      <div className="w-full max-w-lg p-8 rounded-lg shadow-lg bg-[#18181b] border border-[#27272a]">
-        <AuthForm type="login" onSubmit={handleLogin} loading={loading} error={error} />
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-slate-900 text-gray-100">
+      <AuthForm
+        type="login"
+        form={form}
+        loading={loading}
+        serverError={serverError}
+        onSubmit={form.handleSubmit(handleLogin)}
+      />
     </div>
   );
 }

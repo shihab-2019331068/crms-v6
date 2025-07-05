@@ -34,6 +34,94 @@ exports.addSemester = async (req, res) => {
   }
 };
 
+// delete a semester (UPDATED FUNCTION)
+exports.deleteSemester = async (req, res) => {
+  const { semesterId } = req.params;
+  const semesterIdNum = Number(semesterId);
+
+  try {
+    if (!semesterId) {
+      return res.status(400).json({ error: 'Semester ID is required' });
+    }
+
+    // A transaction is crucial here. All operations must succeed or none will.
+    const transaction = await prisma.$transaction([
+      // 1. Delete all related SemesterCourseTeacher entries
+      prisma.semesterCourseTeacher.deleteMany({
+        where: { semesterId: semesterIdNum },
+      }),
+
+      // 2. Delete all related SemesterTeacher entries
+      prisma.semesterTeacher.deleteMany({
+        where: { semesterId: semesterIdNum },
+      }),
+
+      // 3. Delete all related WeeklySchedule entries
+      prisma.weeklySchedule.deleteMany({
+        where: { semesterId: semesterIdNum },
+      }),
+
+      // 4. Disconnect many-to-many relations. This clears the join tables.
+      prisma.semester.update({
+        where: { id: semesterIdNum },
+        data: {
+          courses: { set: [] },
+          labs: { set: [] },
+          rooms: { set: [] },
+        },
+      }),
+
+      // 5. Finally, delete the semester itself now that dependencies are removed
+      prisma.semester.delete({
+        where: { id: semesterIdNum },
+      }),
+    ]);
+
+    res.status(200).json({ message: 'Semester and all related data deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting semester:', error); // Log the full error for debugging
+    // Check if the error is because the semester was not found (e.g., already deleted)
+    if (error.code === 'P2025') {
+       return res.status(404).json({ error: 'Semester not found. It may have already been deleted.' });
+    }
+    res.status(500).json({ error: 'Failed to delete semester. Please check server logs for details.' });
+  }
+};
+
+//archive a semester
+exports.archiveSemester = async (req, res) => {
+  const { semesterId } = req.params;
+  try {
+    if (!semesterId) {
+      return res.status(400).json({ error: 'Semester ID is required' });
+    }
+    const archivedSemester = await prisma.semester.update({
+      where: { id: Number(semesterId) },
+      data: { isArchived: true },
+    });
+    res.status(200).json(archivedSemester);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+//unarchive a semester
+exports.unarchiveSemester = async (req, res) => {
+  const { semesterId } = req.params;
+  try {
+    if (!semesterId) {
+      return res.status(400).json({ error: 'Semester ID is required' });
+    }
+    const unarchivedSemester = await prisma.semester.update({
+      where: { id: Number(semesterId) },
+      data: { isArchived: false },
+    });
+    res.status(200).json(unarchivedSemester);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 // Department Admin: Get all semesters for own department
 exports.getSemesters = async (req, res) => {
   // Read departmentId from query params, fallback to admin's department

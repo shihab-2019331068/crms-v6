@@ -69,6 +69,11 @@ const accessDetails: { [key: string]: { title: string; description: string; link
     title: 'Manage Student',
     description: 'Manage Department Students.',
     link: '/dashboard/managing/users'
+  },
+  ViewRoutine: {
+    title: 'View Routine',
+    description: 'View your class schedule for the current semester.',
+    link: '/dashboard/viewing/routine'
   }
 };
 

@@ -14,12 +14,28 @@ router.post(
   semesterController.addSemester
 );
 
-// router.delete(
-//   '/delete-semester/:semesterId',
-//   authenticateToken,
-//   authorizeRoles('department_admin', 'teacher'),
-//   semesterController.deleteSemester
-// );
+router.delete(
+  '/delete-semester/:semesterId',
+  authenticateToken,
+  authorizeRoles('department_admin', 'teacher'),
+  semesterController.deleteSemester
+);
+
+// archive semester
+router.post(
+  '/archive-semester/:semesterId',
+  authenticateToken,
+  authorizeRoles('department_admin', 'teacher'),
+  semesterController.archiveSemester
+);
+
+// unarchive semester
+router.post(
+  '/unarchive-semester/:semesterId',
+  authenticateToken,
+  authorizeRoles('department_admin', 'teacher'),
+  semesterController.unarchiveSemester
+);
 
 router.post(
   '/add-semesterCourseTeacher',

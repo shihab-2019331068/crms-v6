@@ -24,4 +24,8 @@ router.post('/routine/entry', routineController.addWeeklyScheduleEntry);
 router.delete('/routine/entry/:entryId', routineController.deleteWeeklyScheduleEntry);
 
 
+// --- STUDENT-SPECIFIC ROUTE ---
+router.get('/routine/student/:studentId', routineController.getStudentRoutine);
+
+
 module.exports = router;

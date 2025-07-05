@@ -1,101 +1,148 @@
-// AuthForm.tsx - shared form logic for login/register (to be implemented)
-import React, { useState } from "react";
+// components/AuthForm.tsx
+
+import React from "react";
 import Link from "next/link";
-import { isNonEmpty } from "@/utils/validators";
+import { UseFormReturn, FieldErrors } from "react-hook-form";
+import { LoginSchemaType } from "@/app/login/page"; // Assuming login is in app/(auth)/login
+import { RegisterSchemaType } from "@/app/register/page"; // Assuming register is in app/(auth)/register
 
-interface LoginProps {
+interface Department {
+  id: string;
+  name: string;
+}
+
+// A generic Input component for reuse
+const FormInput = ({ name, label, type = "text", register, errors, ...props }: any) => (
+  <div className="w-full">
+    <label htmlFor={name} className="block text-sm font-medium text-gray-300 mb-1">
+      {label}
+    </label>
+    <input
+      id={name}
+      type={type}
+      {...register(name)}
+      {...props}
+      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message as string}</p>}
+  </div>
+);
+
+// A generic Select component for reuse
+const FormSelect = ({ name, label, register, errors, children, ...props }: any) => (
+  <div className="w-full">
+    <label htmlFor={name} className="block text-sm font-medium text-gray-300 mb-1">
+      {label}
+    </label>
+    <select
+      id={name}
+      {...register(name)}
+      {...props}
+      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      {children}
+    </select>
+    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message as string}</p>}
+  </div>
+);
+
+interface CommonAuthProps {
+  loading: boolean;
+  serverError: string;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+interface LoginAuthProps extends CommonAuthProps {
   type: "login";
-  onSubmit: (data: { email: string; password: string }) => Promise<void>;
-  loading: boolean;
-  error: string;
+  form: UseFormReturn<LoginSchemaType>;
 }
 
-interface RegisterProps {
+interface RegisterAuthProps extends CommonAuthProps {
   type: "register";
-  onSubmit: (data: { name: string; email: string; password: string; confirmPassword: string; role: string; department: string }) => Promise<void>;
-  loading: boolean;
-  error: string;
-  departments: { id: string; name: string }[];
+  form: UseFormReturn<RegisterSchemaType>;
+  departments: Department[];
+  role: string;
 }
 
-type AuthFormProps = LoginProps | RegisterProps;
-
-type LoginFormState = { email: string; password: string };
-type RegisterFormState = { name: string; email: string; password: string; confirmPassword: string; role: string; department: string; session: string };
+type AuthFormProps = LoginAuthProps | RegisterAuthProps;
 
 export default function AuthForm(props: AuthFormProps) {
-  const [loginForm, setLoginForm] = useState<LoginFormState>({ email: "", password: "" });
-  const [registerForm, setRegisterForm] = useState<RegisterFormState>({ name: "", email: "", password: "", confirmPassword: "", role: "", department: "", session: "" });
-  // const [error, setError] = useState(""); // Removed local error state
+  const { type, form, loading, serverError, onSubmit } = props;
+  const { register, formState: { errors } } = form;
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    if (props.type === "login") {
-      setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
-    } else {
-      setRegisterForm({ ...registerForm, [e.target.name]: e.target.value });
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (props.type === "login") {
-      await props.onSubmit(loginForm);
-    } else {
-      // Custom validation for super_admin: department not required, session required for student
-      if (
-        !isNonEmpty(registerForm.name) ||
-        !isNonEmpty(registerForm.email) ||
-        !isNonEmpty(registerForm.password) ||
-        !isNonEmpty(registerForm.confirmPassword) ||
-        !isNonEmpty(registerForm.role) ||
-        (registerForm.role !== "super_admin" && !isNonEmpty(registerForm.department)) ||
-        (registerForm.role === "student" && !isNonEmpty(registerForm.session))
-      ) {
-        return;
-      }
-      await props.onSubmit(registerForm);
-    }
-  }
+  const isRegister = type === "register";
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 p-3 bg-dark">
-      {props.type === "register" && (
-        <input name="name" type="text" placeholder="Full Name" value={registerForm.name} onChange={handleChange} className="input input-bordered w-full" required />
-      )}
-      <input name="email" type="email" placeholder="Email" value={props.type === "login" ? loginForm.email : registerForm.email} onChange={handleChange} className="input input-bordered w-full" required />
-      <input name="password" type="password" placeholder="Password" value={props.type === "login" ? loginForm.password : registerForm.password} onChange={handleChange} className="input input-bordered w-full" required />
-      {props.type === "register" && (
-        <>
-          <input name="confirmPassword" type="password" placeholder="Confirm Password" value={registerForm.confirmPassword} onChange={handleChange} className="input input-bordered w-full" required />
-          <select name="role" value={registerForm.role} onChange={handleChange} className="input input-bordered w-full bg-gray-800 text-white" required>
-            <option value="">Select Role</option>
-            <option value="super_admin">Super Admin</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="department_admin">Department Admin</option>
-          </select>
-          <select name="department" value={registerForm.department} onChange={handleChange} className="input input-bordered w-full bg-gray-800 text-white" required={registerForm.role !== "super_admin"} disabled={registerForm.role === "super_admin"}>
-            <option value="">Select Department</option>
-            {props.type === "register" && props.departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          {registerForm.role === "student" && (
-            <input name="session" type="text" placeholder="Session (e.g. 2019-2020)" value={registerForm.session} onChange={handleChange} className="input input-bordered w-full" required />
+    <div className="w-full max-w-md p-8 space-y-8 bg-slate-800 rounded-xl shadow-lg border border-slate-700">
+      <div>
+        <h2 className="text-center text-3xl font-extrabold text-white">
+          {isRegister ? "Create an Account" : "SUST CRMS Login"}
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-400">
+          {isRegister ? (
+            <>
+              Already have an account?{' '}
+              <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300">
+                Sign in
+              </Link>
+            </>
+          ) : (
+            <>
+              Or{' '}
+              <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
+                create a new account
+              </Link>
+            </>
           )}
-        </>
-      )}
-      {props.error && <div className="text-red-500 text-center mb-2">{props.error}</div>}
-      <button type="submit" className="btn btn-outline btn-sm mt-2 cursor-pointer custom-bordered-btn w-full" disabled={props.loading}>
-        {props.loading ? "Loading..." : props.type === "login" ? "Login" : "Register"}
-      </button>
-      <div className="text-center text-sm text-gray-400 mt-2">
-        {props.type === "login" ? (
-          <span>Don&apos;t have an account? <Link href="/register" className="text-blue-400 hover:underline">Sign Up</Link></span>
-        ) : (
-          <span>Already have an account? <Link href="/login" className="text-blue-400 hover:underline">Login</Link></span>
-        )}
+        </p>
       </div>
-    </form>
+      <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+        {isRegister && (
+          <FormInput name="name" label="Full Name" register={register} errors={errors} placeholder="John Doe" />
+        )}
+
+        <FormInput name="email" label="Email Address" type="email" register={register} errors={errors} placeholder="user@university.edu" />
+        <FormInput name="password" label="Password" type="password" register={register} errors={errors} placeholder="••••••••" />
+
+        {isRegister && (
+          <>
+            <FormInput name="confirmPassword" label="Confirm Password" type="password" register={register} errors={errors} placeholder="••••••••" />
+
+            <FormSelect name="role" label="Select Your Role" register={register} errors={errors}>
+              <option value="">Select a role...</option>
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="department_admin">Department Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </FormSelect>
+
+            {props.role === "student" && (
+              <FormInput name="session" label="Session" register={register} errors={errors} placeholder="e.g., 2021-2025" />
+            )}
+
+            {props.role && props.role !== "super_admin" && (
+              <FormSelect name="departmentId" label="Select Department" register={register} errors={errors} disabled={!props.role || props.role === "super_admin"}>
+                <option value="">Select a department...</option>
+                {props.departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </FormSelect>
+            )}
+          </>
+        )}
+
+        {serverError && <p className="text-red-500 text-sm text-center bg-red-900/20 p-2 rounded-md">{serverError}</p>}
+        
+        <div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-blue-500 disabled:bg-slate-500 disabled:cursor-not-allowed"
+          >
+            {loading ? "Processing..." : isRegister ? "Create Account" : "Sign In"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

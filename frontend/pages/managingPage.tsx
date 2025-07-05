@@ -96,9 +96,9 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
       case 'manageRoutine':
         return <ManageRoutine departmentId={deptId!} />;
       case 'manageTeacher':
-        return <ManageTeacher deptId={deptId!} />;
+        return <ManageTeacher departmentId={deptId!} />;
       case 'manageStudent':
-        return <ManageStudent deptId={deptId!} />;
+        return <ManageStudent departmentId={deptId!} />;
       default:
         return null;
     }

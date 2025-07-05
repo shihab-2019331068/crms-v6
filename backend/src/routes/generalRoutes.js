@@ -56,20 +56,50 @@ router.get('/departments', async (req, res) => {
   }
 });
 
-// Get user details by email (Prisma)
+// Get user details by email (Prisma) - REVISED
 router.get('/user/:email', async (req, res) => {
   try {
     const { email } = req.params;
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        // Include the related department to get its name
+        department: {
+          select: {
+            name: true,
+            id: true,
+            acronym: true,
+          },
+        },
+      },
     });
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const { passwordHash, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+
+    // Destructure to remove sensitive data and the nested department object
+    const { passwordHash, department, departmentId, ...userWithoutPassword } = user;
+
+    // Create a response object that matches the frontend's expectations.
+    // The `department` field is flattened to a string, and fallbacks are provided.
+    const userDetails = {
+      ...userWithoutPassword,
+      department: department?.name || 'N/A',
+      regNo: user.regNo || 'N/A',
+      mobile: user.mobile || 'N/A',
+      degree: user.degree || 'N/A',
+      school: user.school || 'N/A',
+      semester: user.semester || 'N/A',
+      session: user.session || 'N/A',
+      departmentId: department?.id || 'N/A',
+      departmentAcronym: department?.acronym || 'N/A',
+    };
+
+    res.json(userDetails);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('API Error fetching user by email:', error);
+    res.status(500).json({ error: 'Failed to retrieve user details from the server.' });
   }
 });
 

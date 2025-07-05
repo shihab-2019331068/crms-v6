@@ -54,7 +54,7 @@ export default function SideBar({
         </button>
         <button
           className={`flex items-center justify-center sb-btn cursor-pointer ${sidebarOpen ? "w-60" : "w-15"} ${activeForm === "showView" ? "btn-active" : ""}`}
-          onClick={() => { setActiveForm("showView"); setError(""); setSuccess(""); }}
+          onClick={() => { setActiveForm("showViewingPage"); setError(""); setSuccess(""); }}
           disabled={loading}
           title="View"
         >

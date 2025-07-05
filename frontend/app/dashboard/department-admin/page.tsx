@@ -5,9 +5,6 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import DepartmentList from "@/components/departmentList";
 import SlidingPage from "@/pages/slidingPage";
 import ManagingPage from "@/pages/managingPage";
-import RoomList from "@/components/RoomList";
-import LabList from "@/components/LabList";
-import UserList from "@/components/userList";
 import SideBar from "@/components/sideBar";
 import { useEffect } from "react";
 
@@ -46,21 +43,6 @@ export default function DepartmentAdminDashboard() {
             {activeForm === "showManagingPage" && (
               <div className="mt-6">
                 <ManagingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showRooms" && (
-              <div className="mt-6">
-                <RoomList sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showUsers" && (
-              <div className="mt-6">
-                <UserList sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showLabs" && (
-              <div className="mt-6">
-                <LabList sidebarOpen={sidebarOpen} />
               </div>
             )}
           </div>
