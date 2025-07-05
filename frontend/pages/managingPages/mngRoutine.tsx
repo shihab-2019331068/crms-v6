@@ -541,7 +541,7 @@ const RoutineCard: React.FC<{ entry: RoutineEntry, onDelete: (id: number) => voi
     const isBreak = entry.isBreak;
     const cardColor = isBreak ? 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400' : 
                       entry.labId ? 'bg-green-100 dark:bg-green-900 border-green-400' : 
-                      'bg-blue-100 dark:bg-blue-900 border-blue-400';
+                      'bg-orange-100 dark:bg-orange-900 border-orange-400';
 
     return (
         <div className={`p-2 rounded-md border text-xs ${cardColor} relative group`}>
@@ -589,7 +589,7 @@ const AddSlotModal: React.FC<{
              try {
                 const [semRes, courRes, teachRes, roomRes, labRes] = await Promise.all([
                     api.get("/semesters", { params: { departmentId } }),
-                    api.get("/courses", { params: { departmentId } }),
+                    api.get("/get-courses", { params: { departmentId } }),
                     api.get("/teachers", { params: { departmentId } }),
                     api.get("/rooms", { params: { departmentId } }),
                     api.get("/labs", { params: { departmentId } }),

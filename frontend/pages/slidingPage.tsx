@@ -187,7 +187,7 @@ export default function SlidingPage({ sidebarOpen = true }: SlidingPageProps) {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${ sidebarOpen ? "w-316" : "w-364" }`}
+    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold h-7 w-48">

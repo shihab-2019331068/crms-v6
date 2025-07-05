@@ -114,7 +114,7 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-light transition-all duration-300 text-black ${ sidebarOpen ? "w-316" : "w-364" }`}>
+    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}>
       <h1 className="text-2xl font-bold mb-4">
         Management Dashboard
         {activeForm && (

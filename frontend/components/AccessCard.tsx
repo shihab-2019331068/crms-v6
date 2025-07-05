@@ -86,7 +86,7 @@ const AccessCard: React.FC<AccessCardProps> = ({ access, onClick }) => {
 
   return (
     <Card
-      className="hover:shadow-lg transition-shadow duration-200 sidebar-light cursor-pointer"
+className="bg-white text-gray-800 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer"
       onClick={() => onClick && onClick(access)}
     >
       <CardHeader>
