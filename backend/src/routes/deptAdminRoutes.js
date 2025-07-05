@@ -12,14 +12,6 @@ router.get('/dashboard/department-admin', authenticateToken, authorizeRoles('dep
   res.json({ message: 'Department Admin dashboard data' });
 });
 
-// Add new course (Department Admin only)
-router.post(
-  '/dashboard/department-admin/course',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  courseController.addCourse
-);
-
 // Add new semester (Department Admin only)
 router.post(
   '/dashboard/department-admin/semester',
@@ -37,13 +29,6 @@ router.post(
   semesterController.addCourseToSemester
 );
 
-// Get all courses for department admin
-router.get(
-  '/dashboard/department-admin/courses',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  courseController.getCourses
-);
 
 // Get all semesters for department admin
 router.get(
@@ -62,13 +47,6 @@ router.get(
   deptResourceController.getRooms
 );
 
-// Delete a course (Department Admin only)
-router.delete(
-  '/dashboard/department-admin/course',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  courseController.deleteCourse
-);
 
 // Get all courses for a specific semester (Department Admin only)
 router.get(
@@ -86,28 +64,7 @@ router.get(
   deptResourceController.getTeachers
 );
 
-// Assign teacher to course (Department Admin only)
-router.post(
-  '/dashboard/department-admin/assign-teacher',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  courseController.assignTeacherToCourse
-);
 
-// Set the session of a semester (Department Admin only)
-router.post(
-  '/dashboard/department-admin/semester/set-session',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  semesterController.setSemesterSession
-);
 
-// Remove course from semester (Department Admin only)
-router.delete(
-  '/dashboard/department-admin/semester/:semesterId/course/:courseId',
-  authenticateToken,
-  authorizeRoles('department_admin', 'super_admin'),
-  semesterController.removeCourseFromSemester
-);
 
 module.exports = router;

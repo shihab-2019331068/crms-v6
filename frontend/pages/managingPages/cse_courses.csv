@@ -1,0 +1,14 @@
+name,code,credits,type,isMajor,forDeptAcronym
+Data Structures,CSE225,3.0,THEORY,true,CSE
+Data Structures Lab,CSE226,1.5,LAB,true,CSE
+Algorithms,CSE373,3.0,THEORY,true,CSE
+Database Management Systems,CSE330,3.0,THEORY,true,CSE
+Database Management Systems Lab,CSE331,1.5,LAB,true,CSE
+Object-Oriented Programming,CSE215,3.0,THEORY,true,CSE
+Object-Oriented Programming Lab,CSE216,1.5,LAB,true,CSE
+Software Engineering,CSE470,3.0,THEORY,true,CSE
+Senior Project,CSE499,3.0,PROJECT,true,CSE
+Introduction to Programming for Engineers,CSE115,3.0,THEORY,false,EEE
+Programming for Engineers Lab,CSE116,1.5,LAB,false,EEE
+Information Systems for Business,CSE150,3.0,THEORY,false,BUS
+Computational Problem Solving,CSE173,3.0,THEORY,false,MAT

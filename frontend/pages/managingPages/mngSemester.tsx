@@ -246,7 +246,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
     setRemoveCourseError("");
     setRemoveCourseSuccess("");
     try {
-      await api.delete(`/dashboard/department-admin/semester/${semesterId}/course/${courseId}`, {
+      await api.delete(`/semester/${semesterId}/course/${courseId}`, {
         withCredentials: true,
       });
       setRemoveCourseSuccess("Course removed successfully!");

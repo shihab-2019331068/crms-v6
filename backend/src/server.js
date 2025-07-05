@@ -15,13 +15,14 @@ const labRoutes = require('./routes/labRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const semesterRoutes = require('./routes/semesterRoutes');
 const accessRoutes = require('./routes/accessRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
   origin: 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
@@ -36,6 +37,7 @@ app.use('/api', routineRoutes);
 app.use('/api', accessRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', labRoutes);
+app.use('/api', courseRoutes);
 app.use('/api', semesterRoutes);
 
 app.use(errorHandler);
