@@ -522,7 +522,7 @@ const FullRoutineView: React.FC<{
                                         <RoutineCard key={entry.id} entry={entry} onDelete={handleDelete} />
                                     ))}
                                     <div className="flex-grow"></div>
-                                    <Button variant="ghost" size="sm" className="w-full mt-auto" onClick={() => handleAddSlot({ day, time })}>
+                                    <Button variant="ghost" size="sm" className="w-full mt-auto cursor-pointer hover:underline" onClick={() => handleAddSlot({ day, time })}>
                                         <FaPlus className="mr-2 h-3 w-3" /> Add
                                     </Button>
                                 </div>
@@ -540,8 +540,8 @@ const FullRoutineView: React.FC<{
 const RoutineCard: React.FC<{ entry: RoutineEntry, onDelete: (id: number) => void }> = ({ entry, onDelete }) => {
     const isBreak = entry.isBreak;
     const cardColor = isBreak ? 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400' : 
-                      entry.labId ? 'bg-green-100 dark:bg-green-900 border-green-400' : 
-                      'bg-orange-100 dark:bg-orange-900 border-orange-400';
+                      entry.labId ? 'routine-lab dark:bg-green-900 border-green-400' : 
+                      'routine-theory dark:bg-#F7F4CA-900 border-#F7F4CA-400';
 
     return (
         <div className={`p-2 rounded-md border text-xs ${cardColor} relative group`}>

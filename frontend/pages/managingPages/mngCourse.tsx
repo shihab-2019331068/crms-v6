@@ -4,8 +4,44 @@ import { Department } from "@/components/departmentList";
 import { Button } from '@/components/ui/button';
 import { useAuth } from "@/context/AuthContext";
 import { FaArrowLeft } from 'react-icons/fa';
-import { Loader2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, MoreHorizontal, Trash2, Archive, ArchiveRestore } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableCaption,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // --- INTERFACES & TYPES ---
 export interface Course {
@@ -44,7 +80,7 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
   const [success, setSuccess] = useState("");
   const [courseName, setCourseName] = useState("");
   const [courseCode, setCourseCode] = useState("");
-  const [courseCredits, setCourseCredits] = useState("");
+  const [courseCredits, setCourseCredits] =useState<number | "">("");
   const [courseType, setCourseType] = useState("THEORY");
   const [isMajor, setIsMajor] = useState(true);
   const [selectedForDept, setSelectedForDept] = useState<number | null>(null);
@@ -59,7 +95,7 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
       const deptId = departmentId ?? selectedDepartmentId;
       if (!deptId) return;
       const res = await api.get("/get-courses", {
-        params: { departmentId: deptId, isArchived: false }, // Fetch active courses
+        params: { departmentId: deptId, isArchived: false },
         withCredentials: true,
       });
       const sortedCourses = res.data.sort((a: Course, b: Course) => a.code.localeCompare(b.code));
@@ -147,27 +183,20 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
     formData.append('departmentId', String(departmentId ?? selectedDepartmentId));
 
     try {
-      // FIX: Use the correct, nested endpoint
       const res = await api.post("/add-courses-from-csv", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
       setSuccess(res.data.message || "Courses added successfully from CSV!");
       setCsvFile(null); 
-      // Clear the file input visually for the user
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if(fileInput) fileInput.value = "";
-
-      if (view === 'manage') {
-          fetchCourses();
-      }
+      if (view === 'manage') fetchCourses();
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       const errorDetails = apiErr.response?.data?.details;
       let errorMessage = apiErr.response?.data?.error ?? "Failed to upload CSV.";
-      if (Array.isArray(errorDetails)) {
-        errorMessage += ` Details: ${errorDetails.join(', ')}`;
-      }
+      if (Array.isArray(errorDetails)) errorMessage += ` Details: ${errorDetails.join(', ')}`;
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -178,7 +207,6 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
     setLoading(true);
     resetMessages();
     try {
-      // FIX: Use the correct, nested endpoint
       await api.delete("/delete-course", {
         data: { courseId },
         withCredentials: true,
@@ -197,12 +225,11 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
     setLoading(true);
     resetMessages();
     try {
-      // FIX: Use the correct, nested endpoint
       await api.patch("/archive-course", { courseId }, {
         withCredentials: true,
       });
       setSuccess("Course archived successfully!");
-      fetchCourses(); // This will now correctly re-fetch the list of active courses
+      fetchCourses();
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.response?.data?.error ?? "Failed to archive course");
@@ -276,11 +303,11 @@ const MainDashboard: React.FC<{ setView: (view: View) => void }> = ({ setView })
 );
 
 const DashboardCard: React.FC<{ title: string; description: string; icon: string; onClick: () => void; }> = ({ title, description, icon, onClick }) => (
-    <div onClick={onClick} className="p-8 rounded-lg shadow-md transition-transform transform hover:scale-105 semester-btn flex flex-col items-center justify-center">
-        <div className="card-body items-center text-center">
+    <div onClick={onClick} className="p-8 bg-card text-card-foreground rounded-lg shadow-md transition-transform transform hover:scale-105 cursor-pointer flex flex-col items-center justify-center border">
+        <div className="items-center text-center">
             <span className="text-6xl mb-4">{icon}</span>
-            <h2 className="card-title text-2xl">{title}</h2>
-            <p>{description}</p>
+            <h2 className="text-2xl font-semibold">{title}</h2>
+            <p className="text-muted-foreground mt-2">{description}</p>
         </div>
     </div>
 );
@@ -302,51 +329,48 @@ const AddCourseView: React.FC<any> = ({
                 <Button variant={addOption === 'csv' ? 'ghost' : 'link'} className={`rounded-b-none ${addOption === 'csv' && 'border-b-2 border-primary'}`} onClick={() => setAddOption('csv')}>Upload CSV</Button>
             </div>
             {addOption === 'single' ? (
-                <form onSubmit={handleAddCourse} className="mb-6 max-w-2xl flex flex-col gap-4 p-4 border rounded-lg bg-base-100">
-                    <input type="text" placeholder="Course Name" value={courseName} onChange={e => setCourseName(e.target.value)} className="input input-bordered w-full" required disabled={loading} />
-                    <input type="text" placeholder="Course Code" value={courseCode} onChange={e => setCourseCode(e.target.value)} className="input input-bordered w-full" required disabled={loading} />
-                    <input type="number" placeholder="Credits" value={courseCredits} onChange={e => setCourseCredits(e.target.value)} className="input input-bordered w-full" required disabled={loading} />
-                    <select className="select select-bordered w-full" value={courseType} onChange={e => setCourseType(e.target.value)} required>
-                        <option value="THEORY">Theory</option>
-                        <option value="LAB">Lab</option>
-                        <option value="PROJECT">Project</option>
-                        <option value="THESIS">Thesis</option>
-                    </select>
-                    <div className="flex gap-4 items-center">
-                        <label className="label cursor-pointer gap-2"><span className="label-text">Major Course</span><input type="radio" name="majorType" checked={isMajor} onChange={() => setIsMajor(true)} className="radio radio-primary" /></label>
-                        <label className="label cursor-pointer gap-2"><span className="label-text">Non-Major Course</span><input type="radio" name="majorType" checked={!isMajor} onChange={() => setIsMajor(false)} className="radio radio-primary" /></label>
+                <form onSubmit={handleAddCourse} className="mb-6 max-w-2xl flex flex-col gap-6 p-4 border rounded-lg bg-white">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className='space-y-2'> <Label htmlFor="courseName">Course Name</Label> <Input id="courseName" placeholder="e.g., Introduction to Programming" value={courseName} onChange={e => setCourseName(e.target.value)} required disabled={loading} /> </div>
+                        <div className='space-y-2'> <Label htmlFor="courseCode">Course Code</Label> <Input id="courseCode" placeholder="e.g., CS101" value={courseCode} onChange={e => setCourseCode(e.target.value)} required disabled={loading} /> </div>
+                        <div className='space-y-2'> <Label htmlFor="courseCredits">Credits</Label> <Input id="courseCredits" type="number" placeholder="e.g., 3" value={courseCredits} onChange={e => setCourseCredits(e.target.value === '' ? '' : Number(e.target.value))} required disabled={loading} /> </div>
+                        <div className='space-y-2'> <Label>Course Type</Label> <Select value={courseType} onValueChange={setCourseType} required> <SelectTrigger> <SelectValue placeholder="Select type" /> </SelectTrigger> <SelectContent> <SelectItem value="THEORY" className='hover:bg-gray-200'>Theory</SelectItem> <SelectItem className='hover:bg-gray-300' value="LAB">Lab</SelectItem> <SelectItem className='hover:bg-gray-400' value="PROJECT">Project</SelectItem> <SelectItem className='hover:bg-gray-500' value="THESIS">Thesis</SelectItem> </SelectContent> </Select> </div>
+                    </div>
+                    <div className="space-y-2">
+                         <Label>Course Major Type</Label>
+                         <RadioGroup defaultValue="major" onValueChange={(val) => setIsMajor(val === 'major')} className="flex gap-4 items-center">
+                            <div className="flex items-center space-x-2"> <RadioGroupItem value="major" id="r1" /> <Label htmlFor="r1">Major Course</Label> </div>
+                            <div className="flex items-center space-x-2"> <RadioGroupItem value="non-major" id="r2" /> <Label htmlFor="r2">Non-Major Course</Label> </div>
+                         </RadioGroup>
                     </div>
                     {!isMajor && (
-                        <select className="select select-bordered w-full" value={selectedForDept ?? ''} onChange={e => setSelectedForDept(Number(e.target.value))} required>
-                            <option value="" disabled>Select Department Offered To</option>
-                            {departments.filter((dep: Department) => dep.id !== (departmentId ?? selectedDepartmentId)).map((dep: Department) => <option key={dep.id} value={dep.id}>{dep.name} ({dep.acronym})</option>)}
-                        </select>
+                        <div className='space-y-2'>
+                           <Label>Offered To Department</Label>
+                           <Select onValueChange={(val) => setSelectedForDept(Number(val))} required>
+                                <SelectTrigger> <SelectValue placeholder="Select Department Offered To" /> </SelectTrigger>
+                                <SelectContent className='bg-white'> {departments.filter((dep: Department) => dep.id !== (departmentId ?? selectedDepartmentId)).map((dep: Department) => <SelectItem className='hover:bg-gray-200' key={dep.id} value={String(dep.id)}>{dep.name} ({dep.acronym})</SelectItem>)} </SelectContent>
+                           </Select>
+                        </div>
                     )}
-                    <Button type="submit" disabled={loading || (!isMajor && !selectedForDept)} className="mt-2 border cursor-pointer">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Add Course
+                    <Button type="submit" disabled={loading || (!isMajor && !selectedForDept)} className="mt-2 w-full sm:w-auto border hover:underline">
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Add Course
                     </Button>
                 </form>
             ) : (
-                <form onSubmit={handleCsvUpload} className="mb-6 max-w-2xl flex flex-col gap-4 p-4 border rounded-lg bg-base-100">
+                <form onSubmit={handleCsvUpload} className="mb-6 max-w-2xl flex flex-col gap-4 p-4 border rounded-lg bg-white">
                     <h3 className="text-xl font-bold">Upload Courses via CSV</h3>
-                    <p className="text-sm">The CSV file must contain the following columns: <strong>name, code, credits, type, isMajor, forDeptAcronym</strong>.</p>
+                    <p className="text-sm text-muted-foreground">The CSV file must contain the following columns: <strong>name, code, credits, type, isMajor, forDeptAcronym</strong>.</p>
                     <ul className="list-disc list-inside text-sm text-muted-foreground">
                         <li><code>type</code> should be one of: THEORY, LAB, PROJECT, THESIS.</li>
                         <li><code>isMajor</code> should be 'true' or 'false'.</li>
                         <li><code>forDeptAcronym</code> is required for non-major courses. It's the acronym of the department the course is offered TO.</li>
                     </ul>
-                    <input
-                        type="file"
-                        accept=".csv"
-                        onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
-                        className="file-input file-input-bordered border w-full cursor-pointer"
-                        required
-                        disabled={loading}
-                    />
-                    <Button type="submit" disabled={loading || !csvFile} className="mt-2 border cursor-pointer">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Upload CSV
+                    <div className='space-y-2'>
+                        <Label htmlFor='csv-upload'>CSV File</Label>
+                        <Input id='csv-upload' type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)} required disabled={loading} className='cursor-pointer text-gray-800' />
+                    </div>
+                    <Button type="submit" disabled={loading || !csvFile} className="mt-2 w-full sm:w-auto border hover:underline cursor-pointer">
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Upload CSV
                     </Button>
                 </form>
             )}
@@ -357,8 +381,9 @@ const AddCourseView: React.FC<any> = ({
 const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, selectedDepartmentId, user, loading, handleDeleteCourse, handleArchiveCourse }) => {
     const [courseFilter, setCourseFilter] = useState<'all' | 'major' | 'non-major' | 'offered'>('all');
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-    const itemsPerPage = 9;
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+    const itemsPerPage = 10;
 
     const filteredCourses = courses.filter((course: Course) => {
         const currentDeptId = departmentId ?? selectedDepartmentId;
@@ -374,63 +399,109 @@ const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, s
     const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
     const displayedCourses = filteredCourses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+    const confirmDelete = (course: Course) => {
+        setCourseToDelete(course);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const executeDelete = () => {
+        if (courseToDelete) {
+            handleDeleteCourse(courseToDelete.id);
+        }
+    };
+    
     return (
         <div>
             <h2 className="text-2xl font-bold mb-4">Manage Active Courses</h2>
-            <div className="flex gap-2 mb-4 flex-wrap">
+            <div className="flex gap-2 mb-4 flex-wrap border-b pb-4">
                 {(['all', 'major', 'non-major', 'offered'] as const).map(filter => (
                      <Button key={filter} variant={courseFilter === filter ? 'default' : 'outline'} size="sm" onClick={() => { setCourseFilter(filter); setCurrentPage(1); }}>
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)} Courses
+                        {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')} Courses
                     </Button>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayedCourses.map((course: Course) => (
-                    <CourseCard
-                        key={course.id} course={course} departments={departments} user={user}
-                        loading={loading} isExpanded={selectedCourseId === course.id}
-                        onExpand={() => setSelectedCourseId(prevId => prevId === course.id ? null : course.id)}
-                        handleDeleteCourse={handleDeleteCourse}
-                        handleArchiveCourse={handleArchiveCourse}
-                        currentDepartmentId={departmentId ?? selectedDepartmentId}
-                    />
-                ))}
+            <div className="border rounded-lg">
+                <Table>
+                    <TableCaption>A list of active courses. Page {currentPage} of {totalPages}.</TableCaption>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className='w-[120px] text-gray-800'>Code</TableHead>
+                            <TableHead className='text-gray-800'>Name</TableHead>
+                            <TableHead className='text-center text-gray-800'>Credits</TableHead>
+                            <TableHead className='text-gray-800'>Type</TableHead>
+                            <TableHead className='text-gray-800'>Owning Dept.</TableHead>
+                            <TableHead className='text-gray-800'>Offered To</TableHead>
+                            <TableHead className='text-right text-gray-800'>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {displayedCourses.map((course: Course) => {
+                             const departmentAcronym = course.department?.acronym || departments.find((dep: Department) => dep.id === course.departmentId)?.acronym || 'N/A';
+                             const forDepartmentAcronym = course.forDepartment?.acronym || departments.find((dep: Department) => dep.id === course.forDept)?.acronym || 'N/A';
+                             const canEdit = user?.role === 'super_admin' || (departmentId ?? selectedDepartmentId) === course.departmentId;
+
+                            return (
+                                <TableRow key={course.id}>
+                                    <TableCell className='font-medium'>{course.code}</TableCell>
+                                    <TableCell>{course.name}</TableCell>
+                                    <TableCell className='text-center'>{course.credits}</TableCell>
+                                    <TableCell>{course.type}</TableCell>
+                                    <TableCell>{departmentAcronym}</TableCell>
+                                    <TableCell>{forDepartmentAcronym}</TableCell>
+                                    <TableCell className='text-right'>
+                                        {canEdit && (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleArchiveCourse(course.id)}>
+                                                        <Archive className="mr-2 h-4 w-4" /> Archive
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => confirmDelete(course)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
+                 {loading && courses.length === 0 && <div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>}
+                 {!loading && displayedCourses.length === 0 && <div className="text-center p-8 text-muted-foreground">No courses match the current filter.</div>}
             </div>
             
             {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-6">
-                    <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}> <ChevronLeft className="h-4 w-4" /> </Button>
-                    <span className="text-sm font-medium text-muted-foreground"> Page {currentPage} of {totalPages} </span>
-                    <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}> <ChevronRight className="h-4 w-4" /> </Button>
+                <div className="flex items-center justify-end gap-2 mt-4">
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}> <ChevronLeft className="h-4 w-4" /> Previous </Button>
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}> Next <ChevronRight className="h-4 w-4" /> </Button>
                 </div>
             )}
-        </div>
-    );
-};
 
-const CourseCard: React.FC<any> = ({ course, departments, user, loading, isExpanded, onExpand, handleDeleteCourse, handleArchiveCourse, currentDepartmentId }) => {
-    const departmentAcronym = course.department?.acronym || departments.find((dep: Department) => dep.id === course.departmentId)?.acronym || '';
-    const forDepartmentAcronym = course.forDepartment?.acronym || departments.find((dep: Department) => dep.id === course.forDept)?.acronym || '';
-    const canEdit = user?.role === 'super_admin' || currentDepartmentId === course.departmentId;
-    
-    return (
-        <div className="card bg-base-100 shadow-md transition-all duration-300 rounded-lg border">
-            <div className="card-body p-4 cursor-pointer" onClick={onExpand}>
-                <h3 className="card-title text-lg">{course.name} ({course.code})</h3>
-                <p className="text-sm text-muted-foreground"><strong>Credits:</strong> {course.credits} | <strong>Type:</strong> {course.type}</p>
-                <p className="text-sm text-muted-foreground"><strong>Department:</strong> {departmentAcronym}</p>
-                <p className="text-sm text-muted-foreground"><strong>Offered To:</strong> {forDepartmentAcronym}</p>
-            </div>
-            {isExpanded && canEdit && (
-                <div className="p-4 border-t">
-                    <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleArchiveCourse(course.id)} disabled={loading} className="cursor-pointer border">Archive</Button>
-                        {/* FIX: Use destructive variant for delete button */}
-                        <Button size="sm" variant="outline" color="red" onClick={() => handleDeleteCourse(course.id)} disabled={loading} className="cursor-pointer">Delete</Button>
-                    </div>
-                </div>
-            )}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the course "{courseToDelete?.name}" and all of its associated data from the servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null} Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
@@ -444,81 +515,67 @@ const ArchivedCoursesView: React.FC<{ departmentId: number | null }> = ({ depart
     const fetchArchivedCourses = useCallback(async () => {
         if (!departmentId) return;
         setLoading(true);
-        setError('');
-        setSuccess('');
+        setError(''); setSuccess('');
         try {
-            const res = await api.get("/get-courses", {
-                params: { departmentId, isArchived: true },
-                withCredentials: true,
-            });
-            // log response data
-            console.log("response data for archived courses:", res.data);
-
+            const res = await api.get("/get-courses", { params: { departmentId, isArchived: true }, withCredentials: true });
             const sorted = res.data.sort((a: Course, b: Course) => a.code.localeCompare(b.code));
             setArchivedCourses(sorted);
-        } catch (err) {
-            setError("Failed to fetch archived courses.");
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { setError("Failed to fetch archived courses."); } 
+        finally { setLoading(false); }
     }, [departmentId]);
     
-    useEffect(() => {
-        fetchArchivedCourses();
-    }, [fetchArchivedCourses]);
+    useEffect(() => { fetchArchivedCourses(); }, [fetchArchivedCourses]);
     
     const handleUnarchiveCourse = async (courseId: number) => {
         setLoading(true);
-        setError('');
-        setSuccess('');
+        setError(''); setSuccess('');
         try {
-            // FIX: Use the correct, nested endpoint
             await api.patch("/unarchive-course", { courseId }, { withCredentials: true });
             setSuccess("Course has been unarchived successfully.");
-            fetchArchivedCourses(); // Refresh the list
+            fetchArchivedCourses();
         } catch (err: unknown) {
             const apiErr = err as ApiError;
             setError(apiErr.response?.data?.error ?? "Failed to unarchive course.");
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
     
-    if (loading && archivedCourses.length === 0) {
-        return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    }
-    
     return (
-        <div className="max-w-4xl mx-auto">
+        <div>
             <h2 className="text-3xl font-bold mb-6">Archived Courses</h2>
-             {error && (
-                <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" /> <AlertTitle>Error</AlertTitle> <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            )}
-            {success && (
-                <Alert variant="default" className="mb-4 bg-green-50 border-green-200">
-                    <CheckCircle className="h-4 w-4 text-green-500" /> <AlertTitle>Success</AlertTitle> <AlertDescription>{success}</AlertDescription>
-                </Alert>
-            )}
-            {archivedCourses.length === 0 && !loading && (
-                <div className="card bg-base-200 p-8 text-center">
-                    <p>No archived courses found for this department.</p>
-                </div>
-            )}
-            <div className="space-y-4">
-                {archivedCourses.map(course => (
-                    <div key={course.id} className="card bg-base-100 shadow-md rounded-lg border flex flex-row items-center justify-between p-4">
-                        <div>
-                            <h3 className="font-bold text-lg">{course.name} ({course.code})</h3>
-                            <p className="text-sm text-muted-foreground">Credits: {course.credits} | Type: {course.type}</p>
-                        </div>
-                        <Button size="sm" variant="outline" onClick={() => handleUnarchiveCourse(course.id)} disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Unarchive
-                        </Button>
-                    </div>
-                ))}
+             {error && <Alert variant="destructive" className="mb-4"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
+             {success && <Alert variant="default" className="mb-4 bg-green-50 border-green-200"><CheckCircle className="h-4 w-4 text-green-500" /><AlertTitle>Success</AlertTitle><AlertDescription>{success}</AlertDescription></Alert>}
+            
+            <div className='border rounded-lg'>
+                <Table>
+                    <TableCaption>A list of archived courses for this department.</TableCaption>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Course</TableHead>
+                            <TableHead className='w-[100px] text-center'>Credits</TableHead>
+                            <TableHead className='w-[150px]'>Type</TableHead>
+                            <TableHead className='w-[150px] text-right'>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {archivedCourses.map(course => (
+                            <TableRow key={course.id}>
+                                <TableCell>
+                                    <div className="font-medium">{course.name}</div>
+                                    <div className="text-sm text-muted-foreground">{course.code}</div>
+                                </TableCell>
+                                <TableCell className='text-center'>{course.credits}</TableCell>
+                                <TableCell>{course.type}</TableCell>
+                                <TableCell className='text-right'>
+                                    <Button size="sm" variant="outline" onClick={() => handleUnarchiveCourse(course.id)} disabled={loading}>
+                                        <ArchiveRestore className="mr-2 h-4 w-4" /> Unarchive
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                {loading && archivedCourses.length === 0 && <div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>}
+                {!loading && archivedCourses.length === 0 && <div className="text-center p-8 text-muted-foreground">No archived courses found for this department.</div>}
             </div>
         </div>
     );

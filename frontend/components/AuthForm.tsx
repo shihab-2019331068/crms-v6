@@ -88,10 +88,10 @@ export default function AuthForm(props: AuthFormProps) {
             </>
           ) : (
             <>
-              Or{' '}
+              {/* Or{' '}
               <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
                 create a new account
-              </Link>
+              </Link> */}
             </>
           )}
         </p>
