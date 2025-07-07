@@ -195,7 +195,7 @@ export default function mngUser({ sidebarOpen = true }: mngUserProps) {
                               onClick={() => handleMakeHeadAdmin(user.id)}
                               className="flex items-center text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded transition-colors duration-200 cursor-pointer"
                             >
-                              <FaUserTie className="mr-1" /> Make Head
+                              <FaUserTie className="mr-1" /> Make Head Admin
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}

@@ -100,6 +100,9 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
       });
       const sortedCourses = res.data.sort((a: Course, b: Course) => a.code.localeCompare(b.code));
       setCourses(sortedCourses);
+
+      // log response data
+      console.log("courses data", res.data);
     } catch {
       setError("Failed to fetch courses");
     } finally {
@@ -458,7 +461,7 @@ const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, s
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
+                                                <DropdownMenuContent align="end" className="bg-white">
                                                     <DropdownMenuItem onClick={() => handleArchiveCourse(course.id)}>
                                                         <Archive className="mr-2 h-4 w-4" /> Archive
                                                     </DropdownMenuItem>

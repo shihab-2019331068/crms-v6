@@ -1,0 +1,81 @@
+name,code,credits,type,isMajor,forDeptAcronym
+Operating Systems,CSE400,3.0,THEORY,True,CSE
+Computer Networks,CSE401,3.0,THEORY,True,CSE
+Compiler Design,CSE402,3.0,THEORY,True,CSE
+Artificial Intelligence,CSE403,3.0,THEORY,True,CSE
+Machine Learning,CSE404,3.0,THEORY,True,CSE
+Software Engineering,CSE405,3.0,THEORY,True,CSE
+Cybersecurity,CSE406,3.0,THEORY,True,CSE
+Web Technologies,CSE407,3.0,THEORY,True,CSE
+Mobile Application Development,CSE408,3.0,THEORY,True,CSE
+Cloud Computing,CSE409,3.0,THEORY,True,CSE
+Digital Signal Processing,CSE410,3.0,THEORY,True,CSE
+Cryptography,CSE411,3.0,THEORY,True,CSE
+Human Computer Interaction,CSE412,3.0,THEORY,True,CSE
+Natural Language Processing,CSE413,3.0,THEORY,True,CSE
+Quantum Computing,CSE414,3.0,THEORY,True,CSE
+Data Mining,CSE415,3.0,THEORY,True,CSE
+Computer Vision,CSE416,3.0,THEORY,True,CSE
+Distributed Systems,CSE417,3.0,THEORY,True,CSE
+Internet of Things,CSE418,3.0,THEORY,True,CSE
+Big Data Analytics,CSE419,3.0,THEORY,True,CSE
+Operating Systems Lab,CSE420,1.5,LAB,True,CSE
+Computer Networks Lab,CSE421,1.5,LAB,True,CSE
+Compiler Design Lab,CSE422,1.5,LAB,True,CSE
+Artificial Intelligence Lab,CSE423,1.5,LAB,True,CSE
+Machine Learning Lab,CSE424,1.5,LAB,True,CSE
+Software Engineering Lab,CSE425,1.5,LAB,True,CSE
+Cybersecurity Lab,CSE426,1.5,LAB,True,CSE
+Web Technologies Lab,CSE427,1.5,LAB,True,CSE
+Mobile Application Development Lab,CSE428,1.5,LAB,True,CSE
+Cloud Computing Lab,CSE429,1.5,LAB,True,CSE
+Digital Signal Processing Lab,CSE430,1.5,LAB,True,CSE
+Cryptography Lab,CSE431,1.5,LAB,True,CSE
+Human Computer Interaction Lab,CSE432,1.5,LAB,True,CSE
+Natural Language Processing Lab,CSE433,1.5,LAB,True,CSE
+Quantum Computing Lab,CSE434,1.5,LAB,True,CSE
+Data Mining Lab,CSE435,1.5,LAB,True,CSE
+Computer Vision Lab,CSE436,1.5,LAB,True,CSE
+Distributed Systems Lab,CSE437,1.5,LAB,True,CSE
+Internet of Things Lab,CSE438,1.5,LAB,True,CSE
+Big Data Analytics Lab,CSE439,1.5,LAB,True,CSE
+Programming Fundamentals,CSE101,3.0,THEORY,False,EEE
+Programming Lab,CSE102,1.5,LAB,False,EEE
+Computer Fundamentals,CSE103,3.0,THEORY,False,BUS
+Office Application Lab,CSE104,1.5,LAB,False,BUS
+Engineering Drawing,CSE105,2.0,THEORY,False,CEP
+Numerical Methods,CSE106,3.0,THEORY,False,EEE
+Ethical Hacking,CSE470,3.0,THEORY,True,CSE
+Bioinformatics,CSE471,3.0,THEORY,True,CSE
+Game Development,CSE472,3.0,THEORY,True,CSE
+AI for Robotics,CSE473,3.0,THEORY,True,CSE
+Game Development,CSE472C,3.0,THEORY,True,CSE
+Data Mining,CSE415B,3.0,THEORY,True,CSE
+Machine Learning,CSE404A,3.0,THEORY,True,CSE
+Quantum Computing,CSE414A,3.0,THEORY,True,CSE
+Quantum Computing Lab,CSE434A,1.5,LAB,True,CSE
+AI for Robotics,CSE473C,3.0,THEORY,True,CSE
+Bioinformatics,CSE471C,3.0,THEORY,True,CSE
+Software Engineering,CSE405A,3.0,THEORY,True,CSE
+Software Engineering,CSE405AB,3.0,THEORY,True,CSE
+Quantum Computing,CSE414C,3.0,THEORY,True,CSE
+Internet of Things,CSE418A,3.0,THEORY,True,CSE
+Data Mining Lab,CSE435C,1.5,LAB,True,CSE
+Distributed Systems,CSE417C,3.0,THEORY,True,CSE
+Natural Language Processing,CSE413A,3.0,THEORY,True,CSE
+Natural Language Processing,CSE413AA,3.0,THEORY,True,CSE
+Computer Networks Lab,CSE421B,1.5,LAB,True,CSE
+Office Application Lab,CSE104C,1.5,LAB,False,BUS
+Artificial Intelligence,CSE403B,3.0,THEORY,True,CSE
+Internet of Things,CSE418AB,3.0,THEORY,True,CSE
+Bioinformatics,CSE471A,3.0,THEORY,True,CSE
+Office Application Lab,CSE104CA,1.5,LAB,False,BUS
+Compiler Design,CSE402A,3.0,THEORY,True,CSE
+Mobile Application Development Lab,CSE428C,1.5,LAB,True,CSE
+Digital Signal Processing Lab,CSE430C,1.5,LAB,True,CSE
+Cloud Computing Lab,CSE429C,1.5,LAB,True,CSE
+Office Application Lab,CSE104CAC,1.5,LAB,False,BUS
+Web Technologies,CSE407A,3.0,THEORY,True,CSE
+Machine Learning,CSE404B,3.0,THEORY,True,CSE
+Office Application Lab,CSE104CACB,1.5,LAB,False,BUS
+Natural Language Processing,CSE413B,3.0,THEORY,True,CSE

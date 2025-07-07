@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# photos
+/pages/managingPages/snapshots
+
 # testing
 /coverage
 

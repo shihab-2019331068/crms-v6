@@ -27,8 +27,8 @@ interface RoutineEntry {
   lab?: { labNumber: string };
   semester?: { shortname: string };
 }
-interface Semester { id: number; name: string; shortname?: string; }
-interface Teacher { id: number; name: string; }
+interface Semester { id: number; name: string; session?: string; shortname?: string; }
+interface Teacher { id: number; name: string; departmentId: number; }
 interface Room { id: number; roomNumber: string; }
 interface Lab { id: number; labNumber: string; }
 type DayOfWeek = "SUNDAY" | "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY";
@@ -119,6 +119,8 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
   const [error, setError] = useState<string | null>(null);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [labs, setLabs] = useState<Lab[]>([]);
   const [filter, setFilter] = useState<{ type: string; value: string }>({ type: '', value: '' });
 
   useEffect(() => {
@@ -126,17 +128,18 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
       setLoading(true);
       setError(null);
       try {
-        const [routineRes, semRes, teachRes] = await Promise.all([
+        const [routineRes, semRes, teachRes, roomRes, labRes] = await Promise.all([
           api.get("/routine/final", { params: { departmentId } }),
           api.get("/semesters", { params: { departmentId } }),
           api.get("/teachers", { params: { departmentId } }),
+          api.get("/rooms", { params: { departmentId } }),
+          api.get("/labs", { params: { departmentId } }),
         ]);
         setRoutine(routineRes.data.routine || []);
         setSemesters(semRes.data);
-
-        // Filter teachers by department
-        const filteredTeachers = teachRes.data.filter(teacher => teacher.departmentId === departmentId);
-        setTeachers(filteredTeachers);
+        setTeachers(teachRes.data);
+        setRooms(roomRes.data);
+        setLabs(labRes.data);
       } catch (err: any) {
         setError(err.response?.data?.error || "Failed to fetch department routine data.");
       } finally {
@@ -152,6 +155,8 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
       switch (filter.type) {
         case 'semester': return entry.semesterId === Number(filter.value);
         case 'teacher': return entry.teacherId === Number(filter.value);
+        case 'room': return entry.roomId === Number(filter.value);
+        case 'lab': return entry.labId === Number(filter.value);
         default: return true;
       }
     });
@@ -173,7 +178,7 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
   return (
     <div className="space-y-4">
        <div className="flex flex-wrap gap-4 p-4 border rounded-lg bg-card items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 w-full sm:w-auto"><Filter /> Filters</h3>
+            <h3 className="text-lg font-semibold flex items-center gap-2 w-full sm:w-auto"><Filter className="h-4 w-4" /> Filters</h3>
             <Select value={filter.type === 'semester' ? filter.value : ''} onValueChange={v => setFilter({type: 'semester', value: v})}>
                 <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Semester" /></SelectTrigger>
                 <SelectContent className="bg-black text-white">{semesters.map(s => <SelectItem className="hover:bg-gray-800" key={s.id} value={String(s.id)}>{s.shortname || s.name}</SelectItem>)}</SelectContent>
@@ -181,6 +186,14 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
             <Select value={filter.type === 'teacher' ? filter.value : ''} onValueChange={v => setFilter({type: 'teacher', value: v})}>
                 <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Teacher" /></SelectTrigger>
                 <SelectContent className="bg-black text-white">{teachers.map(t => <SelectItem className="hover:bg-gray-800" key={t.id} value={String(t.id)}>{t.name}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={filter.type === 'room' ? filter.value : ''} onValueChange={v => setFilter({type: 'room', value: v})}>
+                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Room" /></SelectTrigger>
+                <SelectContent className="bg-black text-white">{rooms.map(r => <SelectItem className="hover:bg-gray-800" key={r.id} value={String(r.id)}>{r.roomNumber}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={filter.type === 'lab' ? filter.value : ''} onValueChange={v => setFilter({type: 'lab', value: v})}>
+                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Lab" /></SelectTrigger>
+                <SelectContent className="bg-black text-white">{labs.map(l => <SelectItem className="hover:bg-gray-800" key={l.id} value={String(l.id)}>{l.labNumber}</SelectItem>)}</SelectContent>
             </Select>
             {filter.type && <Button variant="ghost" size="icon" onClick={() => setFilter({type: '', value: ''})}><X className="h-4 w-4"/></Button>}
         </div>
@@ -193,16 +206,25 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
 
 const RoutineGridDisplay = ({ routineGrid }: { routineGrid: { [key: string]: RoutineEntry[] } }) => (
   <div className="overflow-x-auto">
-    <div className="grid gap-px bg-border" style={{ gridTemplateColumns: `auto repeat(${daysOfWeek.length}, minmax(180px, 1fr))` }}>
-      <div className="p-2 font-semibold bg-card sticky left-0 z-10">Time</div>
-      {daysOfWeek.map(day => <div key={day} className="p-2 font-semibold bg-card text-center">{day.charAt(0) + day.slice(1).toLowerCase()}</div>)}
-
+    <div className="grid gap-px bg-border" style={{ gridTemplateColumns: `auto repeat(${timeSlots.length}, minmax(180px, 1fr))` }}>
+      {/* Time Headers */}
+      <div className="p-2 font-semibold bg-card sticky left-0 z-10">Day</div>
       {timeSlots.map(time => (
-        <React.Fragment key={time}>
-          <div className="p-2 font-semibold bg-card sticky left-0 z-10 flex items-center justify-center text-sm">
-            {`${time} - ${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00`}
+        <div key={time} className="p-2 font-semibold bg-card text-center">
+          {`${time} - ${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00`}
+        </div>
+      ))}
+
+      {/* Rows for each day */}
+      {daysOfWeek.map(day => (
+        <React.Fragment key={day}>
+          {/* Day Header Cell */}
+          <div className="p-2 font-semibold bg-card sticky left-0 z-10 flex items-center justify-center">
+            {day.charAt(0) + day.slice(1).toLowerCase()}
           </div>
-          {daysOfWeek.map(day => {
+
+          {/* Cells for each time slot */}
+          {timeSlots.map(time => {
             const key = `${day}|${time}`;
             const entries = routineGrid[key] || [];
             return (
@@ -220,8 +242,8 @@ const RoutineGridDisplay = ({ routineGrid }: { routineGrid: { [key: string]: Rou
 const ReadOnlyRoutineCard = ({ entry }: { entry: RoutineEntry }) => {
   const isBreak = entry.isBreak;
   const cardColor = isBreak ? 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400'
-                    : entry.labId ? 'bg-green-100 dark:bg-green-900 border-green-400'
-                    : 'bg-blue-100 dark:bg-blue-900 border-blue-400';
+                    : entry.labId ? 'routine-lab dark:bg-green-900 border-green-400'
+                    : 'routine-theory dark:bg-blue-900 border-blue-400';
 
   return (
     <div className={`p-2 rounded-md border text-xs ${cardColor}`}>

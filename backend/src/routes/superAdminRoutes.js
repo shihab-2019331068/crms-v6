@@ -25,6 +25,14 @@ router.post(
   superAdminController.addRoom
 );
 
+// Delete a room (Super Admin only)
+router.delete(
+  '/dashboard/super-admin/room/:id',
+  authenticateToken,
+  authorizeRoles('super_admin'),
+  superAdminController.deleteRoom
+);
+
 // Add new lab (Super Admin only)
 router.post(
   '/dashboard/super-admin/lab',
@@ -32,6 +40,15 @@ router.post(
   authorizeRoles('super_admin'),
   superAdminController.addLab
 );
+
+// Delete a lab (Super Admin only)
+router.delete(
+  '/dashboard/super-admin/lab/:id',
+  authenticateToken,
+  authorizeRoles('super_admin'),
+  superAdminController.deleteLab
+);
+
 
 // Delete department (Super Admin only)
 router.delete(

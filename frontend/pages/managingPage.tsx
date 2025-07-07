@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
 import AccessCard from '@/components/AccessCard';
+import { Button } from "@/components/ui/button"; // Added for consistency
+import { FaArrowLeft } from "react-icons/fa"; // Added for consistency
 import ManageDept from './managingPages/mngDept';
 import ManageRoomSA from './managingPages/mngRoomSA';
 import ManageLabSA from './managingPages/mngLabSA';
@@ -17,9 +19,6 @@ import ManageRoutine from './managingPages/mngRoutine';
 import ManageTeacher from './managingPages/mngTeacher';
 import ManageStudent from './managingPages/mngStudent';
 
-
-
-
 interface ManagingPageProps {
   sidebarOpen?: boolean
 }
@@ -29,46 +28,41 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
   const [accesses, setAccesses] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<string | null>(null);
   
-  // Change 1: Initialize deptId to null and add a loading state
   const [deptId, setDeptId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserAccesses = async () => {
-      // Don't do anything if we don't have a user object yet
       if (!user?.email) {
-        setLoading(false); // No user, stop loading
+        setLoading(false);
         return;
       }
 
       try {
-        setLoading(true); // Start loading when fetch begins
+        setLoading(true);
         const response = await api.get(`/user/${user.email}`);
         setAccesses(response.data.accesses || []);
         setDeptId(response.data.departmentId);
       } catch (error) {
         console.error('Failed to fetch user accesses', error);
       } finally {
-        setLoading(false); // Stop loading when fetch is done (success or fail)
+        setLoading(false);
       }
     };
 
     fetchUserAccesses();
-  }, [user]); // Dependency on `user` is correct
+  }, [user]);
 
   const handleCardClick = (access: string) => {
     setActiveForm(access);
   };
 
   const renderActiveForm = () => {
-    // Change 2: Handle the case where deptId is needed but not yet loaded
-    // SA forms don't need a deptId, so they can be rendered anytime
     const needsDeptId = [
       'manageAccess', 'manageRoom', 'manageLab', 'manageCourse',
       'manageSemester', 'manageRoutine', 'manageTeacher', 'manageStudent'
     ].includes(activeForm || '');
 
-    // If a form needs a deptId but we don't have one yet, show a message.
     if (needsDeptId && deptId === null) {
       return <div>Could not determine department. User may not be assigned one.</div>;
     }
@@ -82,7 +76,6 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
         return <ManageLabSA />;
       case 'manageUsersSA':
         return <ManageUser />;
-      // Now we can be sure deptId is a number when we reach these cases
       case 'manageAccess':
         return <ManageAccess deptId={deptId!} />;
       case 'manageRoom':
@@ -104,7 +97,6 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
     }
   };
 
-  // Change 3: Show a global loading indicator while fetching user data
   if (loading) {
     return (
       <div className={`min-h-screen p-6`}>
@@ -115,18 +107,19 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
 
   return (
     <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}>
-      <h1 className="text-2xl font-bold mb-4">
-        Management Dashboard
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">
+          Management Dashboard
+        </h1>
         {activeForm && (
-          <button
-            className="btn btn-outline btn-sm ml-4 cursor-pointer custom-bordered-btn"
-            onClick={() => setActiveForm(null)}
-          >
-            Back to Manage
-          </button>
+          <Button variant="outline" onClick={() => setActiveForm(null)}>
+            <FaArrowLeft className="mr-2 h-4 w-4" /> Back to Manage
+          </Button>
         )}
-      </h1>
+      </div>
+      
       {renderActiveForm()}
+      
       {!activeForm && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {accesses.map((access) => (

@@ -171,6 +171,10 @@ exports.deleteCourse = async (req, res) => {
     if (admin.role !== 'super_admin' && admin.departmentId !== course.departmentId) {
         return res.status(403).json({ error: 'You are not authorized to delete this course.' });
     }
+
+    // Delete teachers assigned to the course
+    await prisma.semesterCourseTeacher.deleteMany({ where: { courseId } });
+
     // Delete the course
     await prisma.course.delete({ where: { id: courseId } });
     res.status(200).json({ message: 'Course deleted successfully.' });
@@ -217,7 +221,7 @@ exports.getCoursesForSemester = async (req, res) => {
     }
     const semester = await prisma.semester.findUnique({
       where: { id: Number(semesterId) },
-      include: { courses: { where: { isArchived: false } } }, // Only include active courses in a semester
+      include: { courses: { where: { isArchived: false } }, forDept: true }, // Only include active courses in a semester
     });
     res.status(200).json(semester.courses);
   } catch (error) {

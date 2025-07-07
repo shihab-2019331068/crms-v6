@@ -33,6 +33,17 @@ exports.addRoom = async (req, res) => {
   }
 };
 
+// delete room
+exports.deleteRoom = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.room.delete({ where: { id: Number(id) } });
+    res.status(200).json({ message: 'Room deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
 exports.addLab = async (req, res) => {
   const { name, labNumber, capacity, departmentId } = req.body;
   try {
@@ -50,6 +61,16 @@ exports.addLab = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.deleteLab = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.lab.delete({ where: { id: Number(id) } });
+    res.status(200).json({ message: 'Lab deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
 exports.deleteDepartment = async (req, res) => {
   const { id } = req.params;

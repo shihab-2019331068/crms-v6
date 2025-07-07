@@ -1,3 +1,4 @@
+// --- START OF FILE generalRoutes.js ---
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authMiddleware');
@@ -24,10 +25,14 @@ router.get(
   userController.getDeptUsers
 )
 
-// Get all rooms (Prisma)
+// Get all rooms (Prisma) - MODIFIED
 router.get('/rooms', async (req, res) => {
   try {
+    const { departmentId } = req.query;
+    const whereClause = departmentId ? { departmentId: parseInt(departmentId, 10) } : {};
+
     const rooms = await prisma.room.findMany({
+      where: whereClause,
       include: {
         department: {
           select: { acronym: true }
@@ -119,10 +124,14 @@ router.get('/department/:id', async (req, res) => {
   }
 });
 
-// Get all labs (Prisma)
+// Get all labs (Prisma) - MODIFIED
 router.get('/labs', async (req, res) => {
   try {
+    const { departmentId } = req.query;
+    const whereClause = departmentId ? { departmentId: parseInt(departmentId, 10) } : {};
+    
     const labs = await prisma.lab.findMany({
+      where: whereClause,
       include: {
         department: {
           select: { acronym: true }
@@ -169,20 +178,25 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-// Get teachers by department (Prisma)
+// Get teachers by department (Prisma) - MODIFIED
 router.get('/teachers', async (req, res) => {
   try {
     const { departmentId } = req.query;
-    const whereClause = {};
+    const whereClause = departmentId ? { departmentId: parseInt(departmentId, 10) } : {};
     const teachers = await prisma.user.findMany({
-      where: { role: "teacher", ...whereClause },
+      where: { 
+        role: "teacher", 
+        ...whereClause 
+      },
+      select: {
+          id: true,
+          name: true,
+      }
     });
     res.json(teachers);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
-
 
 module.exports = router;

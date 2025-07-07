@@ -5,9 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
 import { Button } from "@/components/ui/button";
 import AccessCard from '@/components/AccessCard';
-import {
-  FaArrowLeft,
-} from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import ViewRoutine from './viewingPages/viewRoutine';
 
 const viewingPages = ['ViewRoutine'];
@@ -18,51 +16,42 @@ interface ViewingPageProps {
 
 const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
   const { user } = useAuth();
-  const [accesses, setAccesses] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<string | null>(null);
   
-  // Change 1: Initialize deptId to null and add a loading state
-  const [deptId, setDeptId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Store fetched user details
   const [userData, setUserData] = useState<{ id: number; role: string; departmentId: number | null } | null>(null);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      // Don't do anything if we don't have a user object yet
       if (!user?.email) {
-        setLoading(false); // No user, stop loading
+        setLoading(false);
         return;
       }
 
       try {
-        setLoading(true); // Start loading when fetch begins
+        setLoading(true);
         const response = await api.get(`/user/${user.email}`);
         setUserData({
           id: response.data.id,
           role: response.data.role,
           departmentId: response.data.departmentId
         });
-
-        //log response data
         console.log(response.data);
       } catch (error) {
         console.error('Failed to fetch user details', error);
       } finally {
-        setLoading(false); // Stop loading when fetch is done (success or fail)
+        setLoading(false);
       }
     };
 
     fetchUserDetails();
-  }, [user]); // Dependency on `user` is correct
+  }, [user]);
 
   const handleCardClick = (access: string) => {
     setActiveForm(access);
   };
 
   const renderActiveForm = () => {
-    
     switch (activeForm) {
       case 'ViewRoutine':
         // Conditionally render based on user role
@@ -78,7 +67,6 @@ const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
     }
   };
 
-  // Change 3: Show a global loading indicator while fetching user data
   if (loading) {
     return (
       <div className={`min-h-screen p-6`}>
@@ -88,16 +76,20 @@ const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-white ${ sidebarOpen ? "w-316" : "w-364" }`}>
-      <h1 className="text-2xl font-bold mb-4">
-        Viewing Dashboard
+    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">
+          Viewing Dashboard
+        </h1>
         {activeForm && (
             <Button variant="outline" onClick={() => setActiveForm(null)}>
                 <FaArrowLeft className="mr-2 h-4 w-4" /> Back to View
             </Button>
         )}
-      </h1>
+      </div>
+
       {renderActiveForm()}
+
       {!activeForm && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {viewingPages.map((access) => (
@@ -105,7 +97,6 @@ const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
           ))}
         </div>
       )}
-
     </div>
   );
 };

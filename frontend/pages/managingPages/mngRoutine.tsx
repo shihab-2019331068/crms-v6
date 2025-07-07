@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // --- INTERFACES & TYPES ---
 interface RoutineEntry {
@@ -80,6 +81,13 @@ interface Course {
   id: number;
   name: string;
   code: string;
+}
+// NEW: Extended Course interface for modal
+interface CourseWithTeacher extends Course {
+  semesterCourseTeachers?: {
+    teacherId: number;
+    teacher: { name: string };
+  }[];
 }
 interface Teacher {
   id: number;
@@ -213,8 +221,8 @@ const MainDashboard: React.FC<{ setView: (view: View) => void }> = ({
           <FaRobot className="h-16 w-16 text-blue-500 mb-4" />
           <CardTitle className="text-2xl">Generate Routine</CardTitle>
           <CardDescription>
-            Automatically create a routine for major courses of a selected
-            semester.
+            Automatically create a routine for major courses of selected
+            semesters.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -242,7 +250,7 @@ const GenerateRoutineView: React.FC<{
   setError: (msg: string) => void;
 }> = ({ departmentId, setSuccess, setError }) => {
   const [semesters, setSemesters] = useState<Semester[]>([]);
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
+  const [selectedSemesterIds, setSelectedSemesterIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<RoutineEntry[] | null>(null);
   const [unassigned, setUnassigned] = useState<{ name: string, code: string }[] | null>(null);
@@ -250,21 +258,33 @@ const GenerateRoutineView: React.FC<{
   useEffect(() => {
     const fetchSemesters = async () => {
       try {
-        const res = await api.get<Semester[]>("/semesters", {
+        const res = await api.get<Semester[]>("/dashboard/department-admin/semesters", {
           params: { departmentId },
           withCredentials: true,
         });
-        setSemesters(res.data.filter((s) => s.session)); // Only active semesters
+        setSemesters(res.data); // Only active semesters
       } catch {
         setError("Failed to fetch active semesters.");
       }
     };
     fetchSemesters();
   }, [departmentId, setError]);
+  
+  const handleSemesterToggle = (semesterId: number) => {
+    setSelectedSemesterIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(semesterId)) {
+            newSet.delete(semesterId);
+        } else {
+            newSet.add(semesterId);
+        }
+        return newSet;
+    });
+  };
 
   const handlePreview = async () => {
-    if (!selectedSemesterId) {
-      setError("Please select a semester to generate the routine for.");
+    if (selectedSemesterIds.size === 0) {
+      setError("Please select at least one semester to generate the routine for.");
       return;
     }
     setLoading(true);
@@ -275,7 +295,7 @@ const GenerateRoutineView: React.FC<{
     try {
       const res = await api.post("/routine/preview", {
         departmentId,
-        semesterId: Number(selectedSemesterId),
+        semesterIds: Array.from(selectedSemesterIds),
       });
       setPreview(res.data.routine);
       setUnassigned(res.data.unassigned);
@@ -300,7 +320,7 @@ const GenerateRoutineView: React.FC<{
     try {
       const res = await api.post("/routine/generate", {
         routine: preview,
-        semesterId: Number(selectedSemesterId),
+        semesterIds: Array.from(selectedSemesterIds),
         departmentId,
       });
       setSuccess(res.data.message || "Routine saved successfully!");
@@ -319,30 +339,29 @@ const GenerateRoutineView: React.FC<{
         <CardTitle>Generate Routine for Major Courses</CardTitle>
         <CardDescription>
           This tool will attempt to schedule all major courses for the selected
-          semester. Non-major courses or special classes must be added manually.
+          semesters. Non-major courses or special classes must be added manually.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-end gap-4">
-          <div className="flex-grow">
-            <Label htmlFor="semester-select">Select Semester</Label>
-            <Select
-              onValueChange={setSelectedSemesterId}
-              value={selectedSemesterId}
-            >
-              <SelectTrigger id="semester-select">
-                <SelectValue placeholder="Select an active semester" />
-              </SelectTrigger>
-              <SelectContent className="bg-black text-white">
-                {semesters.map((sem) => (
-                  <SelectItem className="hover:bg-gray-800" key={sem.id} value={String(sem.id)}>
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div className="flex-grow w-full">
+            <Label>Select Semesters</Label>
+            <div className="p-3 border rounded-md max-h-40 overflow-y-auto space-y-2 mt-1">
+              {semesters.length > 0 ? semesters.map((sem) => (
+                <div key={sem.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`sem-${sem.id}`}
+                    checked={selectedSemesterIds.has(sem.id)}
+                    onCheckedChange={() => handleSemesterToggle(sem.id)}
+                  />
+                  <Label htmlFor={`sem-${sem.id}`} className="font-normal cursor-pointer">
                     {sem.name} ({sem.session})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </Label>
+                </div>
+              )) : <p className="text-sm text-muted-foreground">No active semesters found.</p>}
+            </div>
           </div>
-          <Button onClick={handlePreview} disabled={loading || !selectedSemesterId}>
+          <Button onClick={handlePreview} disabled={loading || selectedSemesterIds.size === 0} className="w-full md:w-auto border cursor-pointer hover:underline">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Generate Preview
           </Button>
@@ -374,7 +393,7 @@ const GenerateRoutineView: React.FC<{
                 </ul>
               </div>
             )}
-            <Button onClick={handleSave} disabled={loading} className="w-full">
+            <Button onClick={handleSave} disabled={loading} className="w-full border cursor-pointer hover:underline">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save This Routine
             </Button>
@@ -443,7 +462,7 @@ const FullRoutineView: React.FC<{
     };
 
     const handleDelete = async (entryId: number) => {
-        if (!window.confirm("Are you sure you want to delete this schedule entry?")) return;
+        // if (!window.confirm("Are you sure you want to delete this schedule entry?")) return;
         try {
             await api.delete(`/routine/entry/${entryId}`);
             setSuccess("Entry deleted successfully.");
@@ -483,7 +502,6 @@ const FullRoutineView: React.FC<{
     <div>
         <div className="flex flex-wrap gap-4 mb-4 p-4 border rounded-lg bg-card">
             <h3 className="text-lg font-semibold flex items-center gap-2 w-full sm:w-auto"><FaFilter /> Filters</h3>
-            {/* Filter Selects */}
             <Select value={filter.type === 'semester' ? filter.value : ''} onValueChange={v => setFilter({type: 'semester', value: v})}>
                 <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Semester" /></SelectTrigger>
                 <SelectContent  className="bg-black text-white">{semesters.map(s => <SelectItem className="hover:bg-gray-800" key={s.id} value={String(s.id)}>{s.shortname || s.name}</SelectItem>)}</SelectContent>
@@ -504,22 +522,26 @@ const FullRoutineView: React.FC<{
         </div>
 
         <div className="overflow-x-auto">
-            <div className="grid gap-px bg-border" style={{ gridTemplateColumns: `auto repeat(${daysOfWeek.length}, minmax(180px, 1fr))` }}>
-                <div className="p-2 font-semibold bg-card sticky left-0 z-10">Time</div>
-                {daysOfWeek.map(day => <div key={day} className="p-2 font-semibold bg-card text-center">{day}</div>)}
-
+            <div className="grid gap-px bg-border" style={{ gridTemplateColumns: `auto repeat(${timeSlots.length}, minmax(180px, 1fr))` }}>
+                <div className="p-2 font-semibold bg-background sticky left-0 z-10">Day</div>
                 {timeSlots.map(time => (
-                    <React.Fragment key={time}>
-                        <div className="p-2 font-semibold bg-card sticky left-0 z-10 flex items-center justify-center">
-                            {`${time} - ${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00`}
+                    <div key={time} className="p-2 font-semibold bg-background text-center">
+                        {`${time} - ${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00`}
+                    </div>
+                ))}
+
+                {daysOfWeek.map(day => (
+                    <React.Fragment key={day}>
+                        <div className="p-2 font-semibold bg-background sticky left-0 z-10 flex items-center justify-center">
+                            {day}
                         </div>
-                        {daysOfWeek.map(day => {
+                        {timeSlots.map(time => {
                             const key = `${day}|${time}`;
                             const entries = routineGrid[key] || [];
                             return (
                                 <div key={key} className="p-2 bg-card space-y-2 min-h-[120px] flex flex-col">
                                     {entries.map(entry => (
-                                        <RoutineCard key={entry.id} entry={entry} onDelete={handleDelete} />
+                                        <RoutineCard key={entry.id} entry={entry} onDelete={handleDelete}  />
                                     ))}
                                     <div className="flex-grow"></div>
                                     <Button variant="ghost" size="sm" className="w-full mt-auto cursor-pointer hover:underline" onClick={() => handleAddSlot({ day, time })}>
@@ -540,8 +562,8 @@ const FullRoutineView: React.FC<{
 const RoutineCard: React.FC<{ entry: RoutineEntry, onDelete: (id: number) => void }> = ({ entry, onDelete }) => {
     const isBreak = entry.isBreak;
     const cardColor = isBreak ? 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400' : 
-                      entry.labId ? 'routine-lab dark:bg-green-900 border-green-400' : 
-                      'routine-theory dark:bg-#F7F4CA-900 border-#F7F4CA-400';
+                      entry.labId ? 'routine-lab border-indigo-400' : 
+                      'routine-theory border-green-400';
 
     return (
         <div className={`p-2 rounded-md border text-xs ${cardColor} relative group`}>
@@ -555,7 +577,7 @@ const RoutineCard: React.FC<{ entry: RoutineEntry, onDelete: (id: number) => voi
                     <p>S: {entry.semester?.shortname || 'N/A'}</p>
                 </>
             )}
-             <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => entry.id && onDelete(entry.id)}>
+             <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6 opacity-0 group-hover:opacity-100 cursor-pointer" onClick={() => entry.id && onDelete(entry.id)}>
                 <FaTrash className="h-3 w-3 text-red-500" />
             </Button>
         </div>
@@ -575,28 +597,31 @@ const AddSlotModal: React.FC<{
     const [isBreak, setIsBreak] = useState(false);
     const [breakName, setBreakName] = useState("");
     const [selectedSemester, setSelectedSemester] = useState<string>("");
-    const [selectedCourse, setSelectedCourse] = useState<string>("");
+    
+    const [semesterCourses, setSemesterCourses] = useState<CourseWithTeacher[]>([]);
+    const [courseLoading, setCourseLoading] = useState(false);
+    const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+
     const [selectedTeacher, setSelectedTeacher] = useState<string>("");
     const [selectedRoom, setSelectedRoom] = useState<string>("");
     const [selectedLab, setSelectedLab] = useState<string>("");
     
     const [allData, setAllData] = useState<{
-        semesters: Semester[], courses: Course[], teachers: Teacher[], rooms: Room[], labs: Lab[]
-    }>({ semesters: [], courses: [], teachers: [], rooms: [], labs: [] });
+        semesters: Semester[], teachers: Teacher[], rooms: Room[], labs: Lab[]
+    }>({ semesters: [], teachers: [], rooms: [], labs: [] });
 
     useEffect(() => {
-        const fetchAllData = async () => {
+        const fetchPrerequisites = async () => {
+             if(!isOpen) return;
              try {
-                const [semRes, courRes, teachRes, roomRes, labRes] = await Promise.all([
+                const [semRes, teachRes, roomRes, labRes] = await Promise.all([
                     api.get("/semesters", { params: { departmentId } }),
-                    api.get("/get-courses", { params: { departmentId } }),
                     api.get("/teachers", { params: { departmentId } }),
                     api.get("/rooms", { params: { departmentId } }),
                     api.get("/labs", { params: { departmentId } }),
                 ]);
                 setAllData({
                     semesters: semRes.data,
-                    courses: courRes.data,
                     teachers: teachRes.data,
                     rooms: roomRes.data,
                     labs: labRes.data,
@@ -605,9 +630,47 @@ const AddSlotModal: React.FC<{
                 setError("Failed to load data for modal.");
             }
         };
-        if(isOpen) fetchAllData();
+        fetchPrerequisites();
     }, [isOpen, departmentId, setError]);
+
+    useEffect(() => {
+        if (!selectedSemester) {
+            setSemesterCourses([]);
+            setSelectedCourseId("");
+            setSelectedTeacher("");
+            return;
+        }
+
+        const fetchCoursesForSemester = async () => {
+            setCourseLoading(true);
+            setSelectedCourseId("");
+            setSelectedTeacher("");
+            try {
+                const res = await api.get(`/get-semester-courses/${selectedSemester}`);
+                setSemesterCourses(res.data);
+            } catch (err) {
+                setError("Failed to fetch courses for the selected semester.");
+                setSemesterCourses([]);
+            } finally {
+                setCourseLoading(false);
+            }
+        };
+
+        fetchCoursesForSemester();
+    }, [selectedSemester, setError]);
     
+    const handleCourseChange = (courseId: string) => {
+        setSelectedCourseId(courseId);
+        const course = semesterCourses.find(c => c.id === Number(courseId));
+        const assignment = course?.semesterCourseTeachers?.[0];
+
+        if (assignment?.teacherId) {
+            setSelectedTeacher(String(assignment.teacherId));
+        } else {
+            setSelectedTeacher("");
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -619,20 +682,20 @@ const AddSlotModal: React.FC<{
             startTime: slotInfo.time,
             endTime: `${String(Number(slotInfo.time.slice(0, 2)) + 1).padStart(2, "0")}:00`,
             isBreak,
+            semesterId: Number(selectedSemester),
         };
 
         if (isBreak) {
             if (!breakName) { setError("Break name is required."); setLoading(false); return; }
+            if (!selectedSemester) { setError("Semester is required for breaks too."); setLoading(false); return; }
             payload.breakName = breakName;
-            payload.semesterId = Number(selectedSemester); // Breaks need a semester too
         } else {
-            if (!selectedSemester || !selectedCourse || !selectedTeacher || (!selectedRoom && !selectedLab)) {
-                setError("All fields are required for a class slot.");
+            if (!selectedSemester || !selectedCourseId || !selectedTeacher || (!selectedRoom && !selectedLab)) {
+                setError("All fields (Semester, Course, Teacher, and Room/Lab) are required.");
                 setLoading(false);
                 return;
             }
-            payload.semesterId = Number(selectedSemester);
-            payload.courseId = Number(selectedCourse);
+            payload.courseId = Number(selectedCourseId);
             payload.teacherId = Number(selectedTeacher);
             payload.roomId = selectedRoom ? Number(selectedRoom) : null;
             payload.labId = selectedLab ? Number(selectedLab) : null;
@@ -656,36 +719,44 @@ const AddSlotModal: React.FC<{
                 <DialogHeader>
                     <DialogTitle>Add Schedule Slot</DialogTitle>
                     <p className="text-sm text-muted-foreground">{slotInfo.day} at {slotInfo.time}</p>
+
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="flex items-center space-x-2">
                         <Switch id="is-break" checked={isBreak} onCheckedChange={setIsBreak} />
                         <Label htmlFor="is-break">Is this a break?</Label>
                     </div>
-                     <div>
-                        <Label>Semester</Label>
-                        <Select onValueChange={setSelectedSemester} required>
+                    <div>
+                        <Label>Semester *</Label>
+                        <Select onValueChange={setSelectedSemester} value={selectedSemester} required>
                             <SelectTrigger><SelectValue placeholder="Select Semester" /></SelectTrigger>
                             <SelectContent className="bg-black text-white">{allData.semesters.map(s => <SelectItem className="hover:bg-gray-800" key={s.id} value={String(s.id)}>{s.name} ({s.session})</SelectItem>)}</SelectContent>
                         </Select>
                     </div>
                     {isBreak ? (
                         <div>
-                            <Label htmlFor="break-name">Break Name</Label>
+                            <Label htmlFor="break-name">Break Name *</Label>
                             <Input id="break-name" value={breakName} onChange={e => setBreakName(e.target.value)} placeholder="e.g., Lunch Break" />
                         </div>
                     ) : (
                         <>
                             <div>
-                                <Label>Course</Label>
-                                <Select onValueChange={setSelectedCourse} required>
-                                    <SelectTrigger><SelectValue placeholder="Select Course" /></SelectTrigger>
-                                    <SelectContent className="bg-black text-white">{allData.courses.map(c => <SelectItem className="hover:bg-gray-800" key={c.id} value={String(c.id)}>{c.name} ({c.code})</SelectItem>)}</SelectContent>
+                                <Label>Course *</Label>
+                                <Select onValueChange={handleCourseChange} value={selectedCourseId} required disabled={!selectedSemester || courseLoading}>
+                                    <SelectTrigger><SelectValue placeholder={courseLoading ? "Loading courses..." : "Select Course"} /></SelectTrigger>
+                                    <SelectContent className="bg-black text-white">
+                                      {semesterCourses.map(c => <SelectItem className="hover:bg-gray-800" key={c.id} value={String(c.id)}>{c.name} ({c.code})</SelectItem>)}
+                                    </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label>Teacher</Label>
-                                <Select onValueChange={setSelectedTeacher} required>
+                                <Label>Teacher *</Label>
+                                <Select 
+                                    onValueChange={setSelectedTeacher} 
+                                    value={selectedTeacher} 
+                                    required 
+                                    disabled={!!semesterCourses.find(c => c.id === Number(selectedCourseId))?.semesterCourseTeachers?.length}
+                                >
                                     <SelectTrigger><SelectValue placeholder="Select Teacher" /></SelectTrigger>
                                     <SelectContent className="bg-black text-white">{allData.teachers.map(t => <SelectItem className="hover:bg-gray-800" key={t.id} value={String(t.id)}>{t.name}</SelectItem>)}</SelectContent>
                                 </Select>
@@ -709,7 +780,7 @@ const AddSlotModal: React.FC<{
                         </>
                     )}
                     <DialogFooter>
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" disabled={loading} className="border hover:underline cursor-pointer">
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save Slot
                         </Button>

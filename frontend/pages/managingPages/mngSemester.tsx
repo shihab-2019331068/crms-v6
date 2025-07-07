@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FaPlus, FaTasks, FaArchive, FaArrowLeft, FaEye, FaPlusCircle, FaTrash, FaEllipsisV } from 'react-icons/fa';
+import { Department } from "@/components/departmentList";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { de } from 'zod/v4/locales';
 
 
 // Helper function to get ordinal numbers (1st, 2nd, 3rd, 4th)
@@ -30,6 +32,11 @@ for (let year = 1; year <= 4; year++) {
 interface SemesterCourse {
   id: number;
   name: string;
+  credits: number;
+  forDept: number;
+  forDepartment?: {
+    acronym: string;
+  };
   semesterCourseTeachers: {
     teacher: {
       name: string;
@@ -75,7 +82,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const [addCourseLoading, setAddCourseLoading] = useState(false);
   const [addCourseError, setAddCourseError] = useState("");
   const [addCourseSuccess, setAddCourseSuccess] = useState("");
-  const [courses, setCourses] = useState<{ id: number; name: string; semesterId?: number | null }[]>([]);
+  const [courses, setCourses] = useState<{ id: number; name: string; credits: number; forDept: number; forDepartment?: { acronym: string; }; semesterId?: number | null }[]>([]);
   const [semesterCourses, setSemesterCourses] = useState<{ [semesterId: number]: SemesterCourse[] }>({});
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesError, setCoursesError] = useState("");
@@ -101,6 +108,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const [deleteSemesterLoading, setDeleteSemesterLoading] = useState<number | null>(null);
   const [deleteSemesterError, setDeleteSemesterError] = useState("");
   // === END OF UPDATED PART ===
+  const [departments, setDepartments] = useState<Department[]>([]);
 
 
   // --- Data Fetching ---
@@ -126,15 +134,25 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   const fetchCourses = async () => {
     if (!departmentId) return;
     try {
-      const res = await api.get("/courses", {
-        params: { departmentId },
+      const res = await api.get("/get-courses", {
+        params: { departmentId: departmentId, isArchived: false },
         withCredentials: true,
       });
-      const filteredCourses = res.data.filter((course: { forDept: number }) => course.forDept === departmentId);
-      setCourses(filteredCourses);
-      console.log("Filtered Courses:", filteredCourses);
+      setCourses(res.data);
+      console.log("courses", courses);
     } catch {
       setCourses([]);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get<Department[]>("/departments", { withCredentials: true });
+      setDepartments(res.data);
+      //log departments
+      console.log("departments", departments);
+    } catch {
+      setError("Failed to fetch departments");
     }
   };
   
@@ -144,6 +162,8 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
     try {
       const res = await api.get(`/get-semester-courses/${semesterId}`, { withCredentials: true });
       setSemesterCourses(prev => ({ ...prev, [semesterId]: res.data }));
+      //log semester courses
+      console.log("semester courses", semesterCourses[semesterId]);
     } catch {
       setCoursesError("Failed to fetch courses for this semester");
     } finally {
@@ -173,7 +193,10 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   }, [currentView, departmentId]);
 
   useEffect(() => {
-    if (showAddCourseFormId !== null) {
+    if (showAddCourseFormId !== null || showCoursesSemesterId !== null) {
+      if (showAddCourseFormId !== null) fetchSemesterCourses(showAddCourseFormId);
+      else if (showCoursesSemesterId !== null) fetchSemesterCourses(showCoursesSemesterId);
+      fetchDepartments();
       fetchCourses();
     }
   }, [showAddCourseFormId]);
@@ -404,7 +427,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
       <h2 className="text-xl font-bold mb-4">Manage Active Semesters</h2>
       {loading && <p>Loading semesters...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {semesters.filter(s => !s.isArchived).map((semester) => (
           <Card 
             key={semester.id} 
@@ -470,20 +493,24 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                       {coursesLoading ? <p className="text-sm">Loading...</p> : coursesError ? <p className="text-red-500 text-xs">{coursesError}</p> : (
                         <div className="space-y-2">
                           {(semesterCourses[semester.id] || []).length > 0 && (
-                            <div className="grid grid-cols-10 gap-2 font-bold text-sm text-muted-foreground pb-1 border-b">
+                            <div className="grid grid-cols-12 gap-2 font-bold text-sm text-muted-foreground pb-1 border-b">
                               <span className="col-span-4">Course</span>
+                              <span className="col-span-1 text-center">Credits</span>
+                              <span className="col-span-2">Offered To</span>
                               <span className="col-span-3">Teacher</span>
-                              <span className="col-span-3">Actions</span>
+                              <span className="col-span-2">Actions</span>
                             </div>
                           )}
                           {(semesterCourses[semester.id] || []).length === 0 ? <div className="text-xs text-center py-2">No courses assigned.</div> :
                             semesterCourses[semester.id].map(course => (
                               <div key={course.id}>
-                                <div className="grid grid-cols-10 gap-2 items-center text-sm pt-2">
+                                <div className="grid grid-cols-12 gap-2 items-center text-sm pt-2">
                                   {assigningTeacherToCourseId === course.id ? (
                                     <>
                                       <span className="col-span-4 truncate" title={course.name}>{course.name}</span>
-                                      <div className="col-span-6 flex items-center gap-1">
+                                      <span className="col-span-1 text-center">{course.credits}</span>
+                                      <span className="col-span-2 truncate">for {course.forDepartment?.acronym || departments.find((dep: Department) => dep.id === course.forDept)?.acronym || course.forDept || '---'}</span>
+                                      <div className="col-span-5 flex items-center gap-1">
                                         <Select onValueChange={(value) => setSelectedTeacherId(Number(value))}>
                                           <SelectTrigger className="h-8 text-xs">
                                             <SelectValue placeholder="Select Teacher" />
@@ -507,10 +534,12 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                                   ) : (
                                     <>
                                       <span className="col-span-4 truncate" title={course.name}>{course.name}</span>
+                                      <span className="col-span-1 text-center">{course.credits}</span>
+                                      <span className="col-span-2 truncate">{course.forDepartment?.acronym || departments.find((dep: Department) => dep.id === course.forDept)?.acronym || '---'}</span>
                                       <span className="col-span-3 truncate">
                                         {course.semesterCourseTeachers?.[0]?.teacher?.name || <span className="text-muted-foreground italic">Unassigned</span>}
                                       </span>
-                                      <div className="col-span-3 flex items-center">
+                                      <div className="col-span-2 flex items-center">
                                         <Button variant="outline" size="sm" onClick={() => { setAssigningTeacherToCourseId(course.id); setAssignTeacherError(""); setAssignTeacherSuccess(""); setSelectedTeacherId(null); fetchTeachers(); }} className="text-xs h-8">
                                           {course.semesterCourseTeachers?.length > 0 ? 'Change' : 'Assign'}
                                         </Button>
@@ -521,7 +550,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                                     </>
                                   )}
                                 </div>
-                                {assigningTeacherToCourseId === course.id && assignTeacherError && <p className="text-red-500 text-xs mt-1 col-start-5 col-span-6">{assignTeacherError}</p>}
+                                {assigningTeacherToCourseId === course.id && assignTeacherError && <p className="text-red-500 text-xs mt-1 col-start-8 col-span-5">{assignTeacherError}</p>}
                               </div>
                             ))
                           }
@@ -534,12 +563,18 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                   )}
                   {showAddCourseFormId === semester.id && (
                     <form onClick={(e) => e.stopPropagation()} className="p-2 border rounded-md bg-background space-y-2" onSubmit={(e) => handleAddCourseToSemester(e, semester.id)}>
-                      <div className="max-h-48 overflow-y-auto space-y-1 p-2 border rounded">
-                        {courses.filter(c => c.semesterId == null).length === 0 ? <div className="text-xs">No courses available.</div> :
+                      <div className="max-h-150 overflow-y-auto space-y-1 p-2 border rounded">
+                        {courses.filter(c => c.semesterId == null).length === 0 ? <div className="text-xs text-center py-2">No courses available to add.</div> :
                          courses.filter(c => c.semesterId == null).map(c => (
-                           <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm">
-                             <input type="checkbox" value={c.id} checked={addCourseIds.includes(c.id)} onChange={e => e.target.checked ? setAddCourseIds(prev => [...prev, c.id]) : setAddCourseIds(prev => prev.filter(id => id !== c.id))} className="checkbox checkbox-xs" />
-                             <span>{c.name}</span>
+                           <label key={c.id} className="flex items-center justify-between gap-2 cursor-pointer text-sm p-2 hover:bg-muted/50 rounded">
+                             <div className="flex items-center gap-2">
+                               <input type="checkbox" value={c.id} checked={addCourseIds.includes(c.id)} onChange={e => e.target.checked ? setAddCourseIds(prev => [...prev, c.id]) : setAddCourseIds(prev => prev.filter(id => id !== c.id))} className="checkbox checkbox-xs" />
+                               <span title={c.name} className="truncate max-w-[200px]">{c.name}</span>
+                             </div>
+                             <div className="flex items-center gap-4 text-xs text-muted-foreground flex-shrink-0">
+                               <span className="w-12 text-center">for {c.forDepartment?.acronym || departments.find((dep: Department) => dep.id === c.forDept)?.acronym || '---'}</span>
+                               <span className="w-20 text-right">{c.credits} Credits</span>
+                             </div>
                            </label>
                          ))}
                       </div>
@@ -572,7 +607,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                 <p className="text-muted-foreground">There are no archived semesters.</p>
             </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
             {semesters.filter(s => s.isArchived).map((semester) => (
                 <Card key={semester.id} className="semester-btn opacity-70 hover:opacity-100">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
