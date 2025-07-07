@@ -15,7 +15,7 @@ import ManageRoom from './managingPages/mngRoom';
 import ManageLab from './managingPages/mngLab';
 import ManageCourse from './managingPages/mngCourse';
 import ManageSemester from './managingPages/mngSemester';
-import ManageRoutine from './managingPages/mngRoutine';
+import ManageRoutine from './managingPages/routinePages/mngRoutine';
 import ManageTeacher from './managingPages/mngTeacher';
 import ManageStudent from './managingPages/mngStudent';
 

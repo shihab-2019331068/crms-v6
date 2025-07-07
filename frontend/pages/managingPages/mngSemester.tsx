@@ -163,7 +163,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
       const res = await api.get(`/get-semester-courses/${semesterId}`, { withCredentials: true });
       setSemesterCourses(prev => ({ ...prev, [semesterId]: res.data }));
       //log semester courses
-      console.log("semester courses", semesterCourses[semesterId]);
+      // console.log("semester courses", semesterCourses[semesterId]);
     } catch {
       setCoursesError("Failed to fetch courses for this semester");
     } finally {
@@ -193,13 +193,20 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   }, [currentView, departmentId]);
 
   useEffect(() => {
-    if (showAddCourseFormId !== null || showCoursesSemesterId !== null) {
-      if (showAddCourseFormId !== null) fetchSemesterCourses(showAddCourseFormId);
-      else if (showCoursesSemesterId !== null) fetchSemesterCourses(showCoursesSemesterId);
+    if (showAddCourseFormId !== null) {
+      fetchSemesterCourses(showAddCourseFormId);
       fetchDepartments();
       fetchCourses();
     }
   }, [showAddCourseFormId]);
+
+  useEffect(() => {
+    if (showCoursesSemesterId !== null) {
+      fetchSemesterCourses(showCoursesSemesterId);
+      fetchDepartments();
+      fetchCourses();
+    }
+  }, [showCoursesSemesterId]);
 
   // --- Handlers ---
   const handleAddSemester = async (e: React.FormEvent) => {
