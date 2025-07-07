@@ -1,13 +1,16 @@
+// --- START OF FILE teacherRoutine.tsx ---
 
+// Overwrite the entire contents of teacherRoutine.tsx with the following code:
 
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import api from "@/services/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Loader2, X, Filter } from "lucide-react";
+import { Loader2, X, Filter, Ban, Undo2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 // --- INTERFACES & TYPES ---
 interface RoutineEntry {
@@ -21,7 +24,7 @@ interface RoutineEntry {
   teacherId: number | null;
   isBreak: boolean;
   breakName?: string;
-  CANCELED: boolean; // Added to see canceled status
+  CANCELED: boolean;
   course?: { code: string; name: string };
   teacher?: { name: string };
   room?: { roomNumber: string };
@@ -40,13 +43,13 @@ const timeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00"
 // --- PROPS FOR THE MAIN PAGE ---
 interface ViewRoutinePageProps {
   departmentId?: number;
-  studentId?: number;
+  teacherId?: number;
 }
 
 // --- MAIN ROUTER COMPONENT ---
-export default function ViewRoutinePage({ departmentId, studentId }: ViewRoutinePageProps) {
-  if (studentId) {
-    return <StudentRoutineView studentId={studentId} />;
+export default function TeacherRoutine({ departmentId, teacherId }: ViewRoutinePageProps) {
+  if (teacherId) {
+    return <TeacherPersonalRoutineView teacherId={teacherId} />;
   }
   if (departmentId) {
     return <DepartmentRoutineView departmentId={departmentId} />;
@@ -55,36 +58,65 @@ export default function ViewRoutinePage({ departmentId, studentId }: ViewRoutine
     <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>Could not determine context. No student or department specified.</AlertDescription>
+      <AlertDescription>Could not determine context. No teacher or department specified.</AlertDescription>
     </Alert>
   );
 }
 
-// --- STUDENT-SPECIFIC VIEW ---
-const StudentRoutineView = ({ studentId }: { studentId: number }) => {
+// --- TEACHER-SPECIFIC PERSONAL VIEW ---
+const TeacherPersonalRoutineView = ({ teacherId }: { teacherId: number }) => {
   const [routine, setRoutine] = useState<RoutineEntry[]>([]);
-  const [studentName, setStudentName] = useState('');
-  const [semesterName, setSemesterName] = useState('');
+  const [teacherName, setTeacherName] = useState('');
+  const [departmentName, setDepartmentName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStudentRoutine = async () => {
+    const fetchTeacherRoutine = async () => {
+      if (!teacherId) return;
       setLoading(true);
       setError(null);
       try {
-        const res = await api.get(`/routine/student/${studentId}`);
+        const res = await api.get(`/routine/teacher/${teacherId}`);
         setRoutine(res.data.routine || []);
-        setStudentName(res.data.student?.name || '');
-        setSemesterName(res.data.semester ? `${res.data.semester.name} (${res.data.semester.session})` : 'Current Semester');
+        setTeacherName(res.data.teacher?.name || 'Teacher');
+        setDepartmentName(res.data.teacher?.department?.name || 'N/A Department');
       } catch (err: any) {
         setError(err.response?.data?.message || "Failed to fetch your routine.");
       } finally {
         setLoading(false);
       }
     };
-    if (studentId) fetchStudentRoutine();
-  }, [studentId]);
+    fetchTeacherRoutine();
+  }, [teacherId]);
+
+  const handleCancelClass = async (entryId: number) => {
+    const originalRoutine = [...routine];
+    setRoutine(prev => prev.map(entry => 
+      entry.id === entryId ? { ...entry, CANCELED: true } : entry
+    ));
+    try {
+      await api.patch(`/routine/entry/${entryId}/cancel`);
+      toast.success("Class has been marked as canceled.");
+    } catch (err) {
+      toast.error("Failed to cancel class. Please try again.");
+      setRoutine(originalRoutine); // Revert on failure
+    }
+  };
+
+  const handleUncancelClass = async (entryId: number) => {
+    const originalRoutine = [...routine];
+    setRoutine(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, CANCELED: false } : entry
+    ));
+    try {
+      await api.patch(`/routine/entry/${entryId}/uncancel`);
+      toast.success("Class has been reinstated.");
+    } catch (err) {
+      toast.error("Failed to reinstate class. Please try again.");
+      setRoutine(originalRoutine); // Revert on failure
+    }
+  };
 
   const routineGrid = useMemo(() => {
     const grid: { [key: string]: RoutineEntry[] } = {};
@@ -102,13 +134,18 @@ const StudentRoutineView = ({ studentId }: { studentId: number }) => {
   return (
     <div className="space-y-4">
       <div className="p-4 border rounded-lg bg-card">
-        <h1 className="text-xl font-bold">Class Routine for {studentName}</h1>
-        <p className="text-muted-foreground">{semesterName}</p>
+        <h1 className="text-xl font-bold">My Routine: {teacherName}</h1>
+        <p className="text-muted-foreground">{departmentName}</p>
       </div>
       {routine.length === 0 && !loading && (
-        <Alert><AlertCircle className="h-4 w-4" /><AlertTitle>No Schedule Found</AlertTitle><AlertDescription>There are no classes scheduled for you in the current semester.</AlertDescription></Alert>
+        <Alert><AlertCircle className="h-4 w-4" /><AlertTitle>No Schedule Found</AlertTitle><AlertDescription>There are no classes scheduled for you.</AlertDescription></Alert>
       )}
-      <RoutineGridDisplay routineGrid={routineGrid} />
+      <RoutineGridDisplay 
+        routineGrid={routineGrid} 
+        onCancelClass={handleCancelClass}
+        onUncancelClass={handleUncancelClass}
+        currentTeacherId={teacherId}
+      />
     </div>
   );
 };
@@ -204,7 +241,12 @@ const DepartmentRoutineView = ({ departmentId }: { departmentId: number }) => {
 };
 
 // --- SHARED UI COMPONENTS ---
-const RoutineGridDisplay = ({ routineGrid }: { routineGrid: { [key: string]: RoutineEntry[] } }) => (
+const RoutineGridDisplay = ({ routineGrid, onCancelClass, onUncancelClass, currentTeacherId }: { 
+  routineGrid: { [key: string]: RoutineEntry[] };
+  onCancelClass?: (entryId: number) => void;
+  onUncancelClass?: (entryId: number) => void;
+  currentTeacherId?: number;
+}) => (
   <div className="overflow-x-auto">
     <div className="grid gap-px bg-border" style={{ gridTemplateColumns: `auto repeat(${timeSlots.length}, minmax(180px, 1fr))` }}>
       <div className="p-2 font-semibold bg-card sticky left-0 z-10">Day</div>
@@ -223,7 +265,15 @@ const RoutineGridDisplay = ({ routineGrid }: { routineGrid: { [key: string]: Rou
             const entries = routineGrid[key] || [];
             return (
               <div key={key} className="p-2 bg-card space-y-2 min-h-[100px]">
-                {entries.map(entry => <ReadOnlyRoutineCard key={entry.id} entry={entry} />)}
+                {entries.map(entry => 
+                  <ReadOnlyRoutineCard 
+                    key={entry.id} 
+                    entry={entry} 
+                    onCancelClass={onCancelClass}
+                    onUncancelClass={onUncancelClass}
+                    isOwnClass={currentTeacherId !== undefined && entry.teacherId === currentTeacherId}
+                  />
+                )}
               </div>
             );
           })}
@@ -233,7 +283,12 @@ const RoutineGridDisplay = ({ routineGrid }: { routineGrid: { [key: string]: Rou
   </div>
 );
 
-const ReadOnlyRoutineCard = ({ entry }: { entry: RoutineEntry }) => {
+const ReadOnlyRoutineCard = ({ entry, onCancelClass, onUncancelClass, isOwnClass }: { 
+  entry: RoutineEntry;
+  onCancelClass?: (entryId: number) => void;
+  onUncancelClass?: (entryId: number) => void;
+  isOwnClass?: boolean;
+}) => {
   const isBreak = entry.isBreak;
   
   let cardColor = 'routine-theory dark:bg-blue-900 border-blue-400';
@@ -263,6 +318,34 @@ const ReadOnlyRoutineCard = ({ entry }: { entry: RoutineEntry }) => {
           <p>R: {entry.room?.roomNumber || entry.lab?.labNumber || 'N/A'}</p>
           {entry.semester?.shortname && <p>S: {entry.semester.shortname}</p>}
         </>
+      )}
+      {isOwnClass && !isBreak && !entry.CANCELED && onCancelClass && (
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          className="absolute top-1 right-1 opacity-0 hover:opacity-100 hover:bg-gray-600 transition-opacity h-6 px-2 py-1 text-xs z-20"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCancelClass(entry.id);
+          }}
+        >
+          <Ban className="h-3 w-3 mr-1" />
+          Cancel
+        </Button>
+      )}
+      {isOwnClass && entry.CANCELED && onUncancelClass && (
+         <Button
+            variant="secondary"
+            size="sm"
+            className="absolute top-1 right-1 opacity-0 hover:opacity-100 hover:bg-gray-800 transition-opacity h-6 px-2 py-1 text-xs z-20"
+            onClick={(e) => {
+                e.stopPropagation();
+                onUncancelClass(entry.id);
+            }}
+        >
+            <Undo2 className="h-3 w-3 mr-1" />
+            Reinstate
+        </Button>
       )}
     </div>
   );

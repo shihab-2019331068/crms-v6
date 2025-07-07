@@ -1,4 +1,6 @@
 // --- START OF FILE routineController.js ---
+
+// --- START OF FILE routineController.js ---
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -30,16 +32,39 @@ exports.getBySemester = async (req, res) => {
   }
 };
 
-// Get weekly schedule by teacher
+// **UPDATED**: Get weekly schedule by teacher, including teacher's details
 exports.getByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const schedules = await prisma.weeklySchedule.findMany({
-      where: { teacherId: Number(teacherId) },
-      include: { course: true, lab: true, semester: true, room: true },
+    const id = Number(teacherId);
+    if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid teacherId' });
+    }
+    
+    const teacher = await prisma.user.findUnique({
+        where: { id: id },
+        select: { name: true, department: { select: { name: true } } }
     });
-    res.json(schedules);
+
+    if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found." });
+    }
+
+    const routine = await prisma.weeklySchedule.findMany({
+      where: { teacherId: id },
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+      include: { 
+          course: { select: { code: true, name: true } },
+          teacher: { select: { name: true } },
+          room: { select: { roomNumber: true } },
+          lab: { select: { labNumber: true } },
+          semester: { select: { shortname: true } }
+      },
+    });
+    
+    res.status(200).json({ routine, teacher });
   } catch (error) {
+    console.error("Error fetching teacher routine:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -320,6 +345,55 @@ exports.addWeeklyScheduleEntry = async (req, res) => {
     }
 };
 
+// **NEW**: Cancel a single weekly schedule entry
+exports.cancelWeeklyScheduleEntry = async (req, res) => {
+    const { entryId } = req.params;
+    try {
+        const entryToCancel = await prisma.weeklySchedule.findUnique({
+            where: { id: Number(entryId) }
+        });
+
+        if (!entryToCancel) {
+            return res.status(404).json({ error: 'Schedule entry not found.' });
+        }
+
+        const updatedEntry = await prisma.weeklySchedule.update({
+            where: { id: Number(entryId) },
+            data: { CANCELED: true },
+        });
+
+        res.status(200).json(updatedEntry);
+    } catch (error) {
+        console.error("Error canceling schedule entry:", error);
+        res.status(500).json({ error: "Failed to cancel the entry." });
+    }
+};
+
+// **NEW**: Uncancel a single weekly schedule entry
+exports.uncancelWeeklyScheduleEntry = async (req, res) => {
+    const { entryId } = req.params;
+    try {
+        const entryToUncancel = await prisma.weeklySchedule.findUnique({
+            where: { id: Number(entryId) }
+        });
+
+        if (!entryToUncancel) {
+            return res.status(404).json({ error: 'Schedule entry not found.' });
+        }
+
+        const updatedEntry = await prisma.weeklySchedule.update({
+            where: { id: Number(entryId) },
+            data: { CANCELED: false },
+        });
+
+        res.status(200).json(updatedEntry);
+    } catch (error) {
+        console.error("Error uncanceling schedule entry:", error);
+        res.status(500).json({ error: "Failed to uncancel the entry." });
+    }
+};
+
+
 // **NEW**: Delete a single weekly schedule entry
 exports.deleteWeeklyScheduleEntry = async (req, res) => {
     const { entryId } = req.params;
@@ -333,6 +407,19 @@ exports.deleteWeeklyScheduleEntry = async (req, res) => {
             return res.status(404).json({ error: 'Entry not found.' });
         }
         res.status(500).json({ error: "Failed to delete entry." });
+    }
+};
+
+// Delete all weekly schedule entries for a department
+exports.deleteAllWeeklyScheduleEntries = async (req, res) => {
+    const { departmentId } = req.params;
+    try {
+        await prisma.weeklySchedule.deleteMany({
+            where: { departmentId: Number(departmentId) }
+        });
+        res.status(200).json({ message: "All entries deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete entries." });
     }
 };
 

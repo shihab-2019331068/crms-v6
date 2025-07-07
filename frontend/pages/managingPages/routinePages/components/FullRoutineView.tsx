@@ -3,8 +3,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import api from "@/services/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { FaPlus, FaFilter } from "react-icons/fa";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FaPlus, FaFilter, FaTrash } from "react-icons/fa";
 import { Loader2, X } from "lucide-react";
 import { RoutineEntry, Semester, Teacher, Room, Lab, SlotInfo } from "../types";
 import { daysOfWeek, timeSlots } from "../constants";
@@ -28,6 +28,7 @@ export const FullRoutineView: React.FC<FullRoutineViewProps> = ({ departmentId, 
     const [rooms, setRooms] = useState<Room[]>([]);
     const [labs, setLabs] = useState<Lab[]>([]);
     const [filter, setFilter] = useState<{ type: string, value: string }>({ type: '', value: '' });
+    const [isResetting, setIsResetting] = useState(false);
 
     const fetchRoutineData = useCallback(async () => {
         setLoading(true);
@@ -37,6 +38,21 @@ export const FullRoutineView: React.FC<FullRoutineViewProps> = ({ departmentId, 
         } catch { setError("Failed to fetch routine data."); } 
         finally { setLoading(false); }
     }, [departmentId, setError]);
+
+    const handleResetRoutine = async () => {
+        if (window.confirm("Are you sure you want to delete ALL entries for this department's routine? This action cannot be undone.")) {
+            setIsResetting(true);
+            try {
+                await api.delete(`/routine/department/${departmentId}`);
+                setSuccess("Routine reset successfully. All entries have been deleted.");
+                await fetchRoutineData();
+            } catch (err: any) {
+                setError(err.response?.data?.error || "Failed to reset routine.");
+            } finally {
+                setIsResetting(false);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchFiltersData = async () => {
@@ -98,6 +114,19 @@ export const FullRoutineView: React.FC<FullRoutineViewProps> = ({ departmentId, 
             <Select value={filter.type === 'room' ? filter.value : ''} onValueChange={v => setFilter({type: 'room', value: v})}><SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Room" /></SelectTrigger><SelectContent className="bg-black text-white">{rooms.map(r => <SelectItem className="hover:bg-gray-800" key={r.id} value={String(r.id)}>{r.roomNumber}</SelectItem>)}</SelectContent></Select>
             <Select value={filter.type === 'lab' ? filter.value : ''} onValueChange={v => setFilter({type: 'lab', value: v})}><SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter by Lab" /></SelectTrigger><SelectContent className="bg-black text-white">{labs.map(l => <SelectItem className="hover:bg-gray-800" key={l.id} value={String(l.id)}>{l.labNumber}</SelectItem>)}</SelectContent></Select>
             {filter.type && <Button variant="ghost" size="icon" onClick={() => setFilter({type: '', value: ''})}><X className="h-4 w-4"/></Button>}
+            <Button
+                variant="destructive"
+                className="ml-auto text-gray-800 border cursor-pointer hover:underline"
+                onClick={handleResetRoutine}
+                disabled={isResetting || loading}
+            >
+                {isResetting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <FaTrash className="mr-2 h-4 w-4" />
+                )}
+                Reset Routine
+            </Button>
         </div>
 
         <div className="overflow-x-auto">

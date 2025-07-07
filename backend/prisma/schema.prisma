@@ -165,6 +165,8 @@ model WeeklySchedule {
   teacherId    Int?
   isBreak      Boolean    @default(false)
   breakName    String?
+  CANCELED     Boolean    @default(false)
+
 
   @@unique([semesterId, dayOfWeek, startTime])
   @@map("weekly_schedules")
