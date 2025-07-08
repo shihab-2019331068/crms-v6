@@ -26,6 +26,7 @@ export interface Semester {
   name: string;
   shortname?: string;
   session?: string;
+  isArchived?: boolean;
 }
 export interface Course {
   id: number;

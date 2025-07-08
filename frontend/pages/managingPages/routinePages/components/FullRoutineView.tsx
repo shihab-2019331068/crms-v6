@@ -58,12 +58,16 @@ export const FullRoutineView: React.FC<FullRoutineViewProps> = ({ departmentId, 
         const fetchFiltersData = async () => {
             try {
                 const [semRes, teachRes, roomRes, labRes] = await Promise.all([
-                    api.get("/semesters", { params: { departmentId } }),
+                    api.get<Semester[]>("/semesters", { params: { departmentId } }),
                     api.get("/teachers", { params: { departmentId } }),
                     api.get("/rooms", { params: { departmentId } }),
                     api.get("/labs", { params: { departmentId } }),
                 ]);
-                setSemesters(semRes.data); setTeachers(teachRes.data); setRooms(roomRes.data); setLabs(labRes.data);
+                const activeSemesters = semRes.data.filter(s => !s.isArchived);
+                setSemesters(activeSemesters); 
+                setTeachers(teachRes.data); 
+                setRooms(roomRes.data); 
+                setLabs(labRes.data);
             } catch { setError("Failed to load filter options."); }
         };
         fetchRoutineData();

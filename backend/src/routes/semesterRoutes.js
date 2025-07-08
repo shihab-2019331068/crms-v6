@@ -7,6 +7,14 @@ const semesterController = require('../controllers/semesterController');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Configure multer for file uploads
+const multer = require('multer');
+const storage = multer.memoryStorage(); // Use memory storage for efficiency
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
+});
+
 router.post(
   '/add-semester',
   authenticateToken,
@@ -49,6 +57,15 @@ router.get(
   authenticateToken,
   authorizeRoles('department_admin', 'teacher'),
   semesterController.getSemesterCourses
+);
+
+// [NEW] Add courses to a semester via CSV upload
+router.post(
+  '/dashboard/department-admin/semester/course/upload-csv',
+  authenticateToken,
+  authorizeRoles('department_admin', 'super_admin'),
+  upload.single('file'), // Multer middleware to handle single file upload with field name 'file'
+  semesterController.addCoursesFromCSV
 );
 
 // Remove course from semester (Department Admin only)

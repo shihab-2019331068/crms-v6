@@ -123,23 +123,16 @@ exports.generateWeeklyRoutine = async (req, res) => {
 
 // **UPDATED**: Preview generated weekly routine with advanced constraints
 exports.previewWeeklyRoutine = async (req, res) => {
-  const { departmentId, semesterIds } = req.body;
+  const { departmentId, semesterIds, nonMajorCourseSlots, preferredBreakTime } = req.body;
+
   if (!departmentId || !Array.isArray(semesterIds) || semesterIds.length === 0) {
     return res.status(400).json({ error: 'departmentId and a non-empty semesterIds array are required.' });
   }
+  if (!preferredBreakTime) {
+    return res.status(400).json({ error: 'preferredBreakTime is required.' });
+  }
 
   try {
-    // --- NEW: Configuration for non-major courses and other settings ---
-    // These slots will be avoided by the generator.
-    // Format: { DAY: ["HH:MM", "HH:MM"], ... }
-    const nonMajorCourseSlots = {
-      // Example: Reserve Sunday and Tuesday from 13:00 to 15:00 for all semesters
-      SUNDAY: ["13:00", "14:00"],
-      TUESDAY: ["13:00", "14:00"],
-      // You can also reserve slots on a per-semester basis if needed,
-      // but this global approach is simpler for inter-departmental scheduling.
-    };
-
     // --- Fetch required data (same as before) ---
     const courseTeacherPairs = await prisma.semesterCourseTeacher.findMany({
       where: {
@@ -171,7 +164,7 @@ exports.previewWeeklyRoutine = async (req, res) => {
         courseName: course.name, courseCode: course.code, departmentId: Number(departmentId)
       };
       
-      if (course.type === 'LAB' && course.credits === 1.5) {
+      if (course.type === 'LAB' && course.credits > 1.0) {
         classesToSchedule.push({ ...baseClassInfo, duration: 3 });
       } else if (course.type === 'LAB' && course.credits === 1.0) {
         classesToSchedule.push({ ...baseClassInfo, duration: 2 });
@@ -184,62 +177,37 @@ exports.previewWeeklyRoutine = async (req, res) => {
     });
     
     // --- MODIFIED: Smart sorting ---
-    // Sort classes by duration (descending) first, then randomize.
-    // This is a common heuristic: scheduling the biggest "blocks" first is often more efficient.
     classesToSchedule.sort((a, b) => b.duration - a.duration || Math.random() - 0.5);
 
-    // --- Setup (same as before) ---
+    // --- MODIFIED: Setup with dynamic time slots ---
     const routine = [];
     const teacherBusy = {}, semesterBusy = {}, roomBusy = {}, labBusy = {};
     const unassignedLog = new Map();
     const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY'];
-    const timeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+    
+    const allPossibleSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+    const timeSlots = allPossibleSlots.filter(slot => slot !== preferredBreakTime); // Dynamic time slots for scheduling
+
     const timeSlotIndexes = Object.fromEntries(timeSlots.map((t, i) => [t, i]));
 
-    // --- NEW HELPER: The "AI" Cost Function ---
-    // This function evaluates how "good" a potential placement is. Lower cost is better.
+    // --- NEW HELPER: The "AI" Cost Function (same as before) ---
     const calculatePlacementCost = (day, startTimeIndex, classInfo) => {
         let cost = 0;
         const slotsToCheck = [];
         for (let i = 0; i < classInfo.duration; i++) {
           slotsToCheck.push(timeSlots[startTimeIndex + i]);
         }
-
-        // Penalty for being later in the day (prefers morning classes)
         cost += startTimeIndex * 5;
-
-        // --- Breathing Room Constraint ---
         const slotBefore = startTimeIndex > 0 ? timeSlots[startTimeIndex - 1] : null;
         const slotAfter = (startTimeIndex + classInfo.duration) < timeSlots.length ? timeSlots[startTimeIndex + classInfo.duration] : null;
-
-        // Check teacher schedule
-        if (slotBefore && teacherBusy[classInfo.teacherId]?.[day]?.includes(slotBefore)) {
-          cost += 1000; // High penalty for back-to-back classes for a teacher
-        }
-        if (slotAfter && teacherBusy[classInfo.teacherId]?.[day]?.includes(slotAfter)) {
-          cost += 1000; // High penalty for back-to-back classes for a teacher
-        }
-
-        // Check semester schedule
-        if (slotBefore && semesterBusy[classInfo.semesterId]?.[day]?.includes(slotBefore)) {
-          cost += 1500; // Even higher penalty for student back-to-back
-        }
-        if (slotAfter && semesterBusy[classInfo.semesterId]?.[day]?.includes(slotAfter)) {
-          cost += 1500;
-        }
-        
-        // --- Schedule Fragmentation Penalty ---
-        // Penalty for creating a single-hour "hole" in a schedule.
+        if (slotBefore && teacherBusy[classInfo.teacherId]?.[day]?.includes(slotBefore)) cost += 1000;
+        if (slotAfter && teacherBusy[classInfo.teacherId]?.[day]?.includes(slotAfter)) cost += 1000;
+        if (slotBefore && semesterBusy[classInfo.semesterId]?.[day]?.includes(slotBefore)) cost += 1500;
+        if (slotAfter && semesterBusy[classInfo.semesterId]?.[day]?.includes(slotAfter)) cost += 1500;
         const twoSlotsBefore = startTimeIndex > 1 ? timeSlots[startTimeIndex - 2] : null;
         const twoSlotsAfter = (startTimeIndex + classInfo.duration + 1) < timeSlots.length ? timeSlots[startTimeIndex + classInfo.duration + 1] : null;
-        
-        if(slotBefore && !teacherBusy[classInfo.teacherId]?.[day]?.includes(slotBefore) && twoSlotsBefore && teacherBusy[classInfo.teacherId]?.[day]?.includes(twoSlotsBefore)){
-            cost += 200; // Creates a 1-hour gap for the teacher
-        }
-        if(slotAfter && !teacherBusy[classInfo.teacherId]?.[day]?.includes(slotAfter) && twoSlotsAfter && teacherBusy[classInfo.teacherId]?.[day]?.includes(twoSlotsAfter)){
-            cost += 200; // Creates a 1-hour gap for the teacher
-        }
-
+        if(slotBefore && !teacherBusy[classInfo.teacherId]?.[day]?.includes(slotBefore) && twoSlotsBefore && teacherBusy[classInfo.teacherId]?.[day]?.includes(twoSlotsBefore)) cost += 200;
+        if(slotAfter && !teacherBusy[classInfo.teacherId]?.[day]?.includes(slotAfter) && twoSlotsAfter && teacherBusy[classInfo.teacherId]?.[day]?.includes(twoSlotsAfter)) cost += 200;
         return cost;
     };
 
@@ -251,16 +219,29 @@ exports.previewWeeklyRoutine = async (req, res) => {
 
       for (const day of days) {
         for (let startTimeIndex = 0; startTimeIndex < timeSlots.length; startTimeIndex++) {
-          const time = timeSlots[startTimeIndex];
 
-          // Constraint 1: Check if block fits within the day
+          // Constraint 1: Check if block fits within the day's available slots
           if (startTimeIndex + classToAssign.duration > timeSlots.length) continue;
+          
+          // **NEW** Constraint 1.5: Check for time continuity to avoid scheduling across break time
+          if (classToAssign.duration > 1) {
+            let isContinuous = true;
+            for (let i = 0; i < classToAssign.duration - 1; i++) {
+                const currentSlotHour = Number(timeSlots[startTimeIndex + i].slice(0, 2));
+                const nextSlotHour = Number(timeSlots[startTimeIndex + i + 1].slice(0, 2));
+                if (nextSlotHour !== currentSlotHour + 1) {
+                    isContinuous = false;
+                    break;
+                }
+            }
+            if (!isContinuous) continue; // This block is not contiguous (e.g., spans the break), so skip.
+          }
 
-          // Constraint 2: Check against reserved non-major course slots
+          // Constraint 2: Check against reserved non-major course slots from request
           let isReserved = false;
           for (let i = 0; i < classToAssign.duration; i++) {
               const slotToCheck = timeSlots[startTimeIndex + i];
-              if (nonMajorCourseSlots[day]?.includes(slotToCheck)) {
+              if (nonMajorCourseSlots && nonMajorCourseSlots[day]?.includes(slotToCheck)) {
                   isReserved = true;
                   break;
               }
@@ -296,7 +277,6 @@ exports.previewWeeklyRoutine = async (req, res) => {
             if (classToAssign.courseType === 'LAB') assignedLabId = availableRoom.id;
             else assignedRoomId = availableRoom.id;
             
-            // This is a valid placement. Now, calculate its cost.
             const cost = calculatePlacementCost(day, startTimeIndex, classToAssign);
 
             if (cost < lowestCost) {
@@ -309,26 +289,31 @@ exports.previewWeeklyRoutine = async (req, res) => {
         }
       }
 
-      // --- After checking all possibilities, make the best assignment ---
+      // --- **MODIFIED**: After checking all possibilities, make the best assignment ---
       if (bestPlacement) {
         const { day, startTimeIndex, assignedRoomId, assignedLabId } = bestPlacement;
-        const startTime = timeSlots[startTimeIndex];
-        const endTime = `${String(Number(timeSlots[startTimeIndex + classToAssign.duration - 1].slice(0, 2)) + 1).padStart(2, '0')}:00`;
 
-        // Add to routine
-        routine.push({
-          semesterId: classToAssign.semesterId,
-          departmentId: classToAssign.departmentId,
-          dayOfWeek: day,
-          startTime, endTime,
-          courseId: classToAssign.courseId,
-          teacherId: classToAssign.teacherId,
-          roomId: assignedRoomId,
-          labId: assignedLabId,
-          isBreak: false,
-        });
+        // **NEW LOGIC**: Create multiple 1-hour entries for labs, one entry for theory.
+        for (let i = 0; i < classToAssign.duration; i++) {
+            const currentSlotIndex = startTimeIndex + i;
+            const startTime = timeSlots[currentSlotIndex];
+            const endTime = `${String(Number(startTime.slice(0, 2)) + 1).padStart(2, '0')}:00`;
 
-        // Update all busy trackers for the chosen block
+            routine.push({
+                semesterId: classToAssign.semesterId,
+                departmentId: classToAssign.departmentId,
+                dayOfWeek: day,
+                startTime,
+                endTime, // Always a 1-hour duration
+                courseId: classToAssign.courseId,
+                teacherId: classToAssign.teacherId,
+                roomId: assignedRoomId,
+                labId: assignedLabId,
+                isBreak: false,
+            });
+        }
+        
+        // Update all busy trackers for the entire chosen block (this logic is unchanged)
         for (let i = 0; i < classToAssign.duration; i++) {
           const slotToBook = timeSlots[startTimeIndex + i];
           teacherBusy[classToAssign.teacherId] = { ...teacherBusy[classToAssign.teacherId], [day]: [...(teacherBusy[classToAssign.teacherId]?.[day] || []), slotToBook] };

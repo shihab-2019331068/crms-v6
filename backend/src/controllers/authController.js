@@ -4,9 +4,9 @@ const { createUser, findUserByEmail, getDepartmentByDepartmentId } = require('..
 
 const signup = async (req, res, next) => {
   try {
-    const { name, email, password, role, department, session } = req.body;
+    const { name, email, password, role, departmentId, session } = req.body;
 
-    // console.log('Signup request received:', { name, email, role, department, session });
+    console.log('Signup request received:', { name, email, role, departmentId, session });
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'All fields are required.' });
@@ -16,12 +16,10 @@ const signup = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid role.' });
     }
     // Require departmentId for all roles except super_admin
-    let departmentId = null;
     if (role !== 'super_admin') {
-      if (!department || department.toString().trim() === '') {
-        return res.status(400).json({ error: 'Department ID is required for this role.' });
+      if (!departmentId || departmentId.toString().trim() === '') {
+        return res.status(400).json({ message: 'Department ID is required for this role.' });
       }
-      departmentId = department;
     }
     // Require session if role is student
     if (role === 'student' && (!session || session.trim() === '')) {
@@ -66,7 +64,7 @@ const login = async (req, res, next) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
     // Set token in HttpOnly, Secure cookie
     res.cookie('token', token, {
       httpOnly: true,

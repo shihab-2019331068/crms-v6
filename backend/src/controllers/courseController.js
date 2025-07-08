@@ -183,6 +183,59 @@ exports.deleteCourse = async (req, res) => {
   }
 };
 
+// --- START: ADDED METHOD ---
+// Department Admin: Delete All Courses for a department
+exports.deleteAllCourses = async (req, res) => {
+    const { departmentId } = req.body;
+    const user = req.user;
+  
+    try {
+      if (!departmentId) {
+        return res.status(400).json({ error: 'departmentId is required.' });
+      }
+  
+      // Authorization Check
+      const admin = await prisma.user.findUnique({ where: { id: user.userId } });
+      if (admin.role !== 'super_admin' && admin.departmentId !== departmentId) {
+          return res.status(403).json({ error: 'You are not authorized to perform this action for the specified department.' });
+      }
+      
+      // Find all ACTIVE courses owned by this department
+      const coursesToDelete = await prisma.course.findMany({
+        where: { 
+          departmentId: departmentId,
+          isArchived: false // Only target active courses
+        },
+        select: { id: true }
+      });
+
+      if (coursesToDelete.length === 0) {
+        return res.status(200).json({ message: 'No active courses found for this department to delete.' });
+      }
+
+      const courseIdsToDelete = coursesToDelete.map(c => c.id);
+  
+      // Use a transaction to ensure both operations succeed or fail together
+      const result = await prisma.$transaction([
+        // 1. Delete associated teacher assignments from SemesterCourseTeacher
+        prisma.semesterCourseTeacher.deleteMany({ 
+          where: { courseId: { in: courseIdsToDelete } } 
+        }),
+        // 2. Delete the courses
+        prisma.course.deleteMany({ 
+          where: { id: { in: courseIdsToDelete } } 
+        })
+      ]);
+  
+      const deletedCoursesCount = result[1].count;
+      res.status(200).json({ message: `${deletedCoursesCount} active courses have been deleted successfully.` });
+    } catch (error) {
+      console.error("Error deleting all courses:", error);
+      res.status(500).json({ error: 'An error occurred while deleting courses.', details: error.message });
+    }
+};
+// --- END: ADDED METHOD ---
+
 // Department Admin: Assign Teacher to Course
 exports.assignTeacherToCourse = async (req, res) => {
   const { courseId, teacherId } = req.body;

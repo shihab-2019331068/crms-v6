@@ -80,6 +80,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       // The data is already validated by Zod, no need for extra checks here.
+      console.log("data: ", data);
       await api.post("/signup", data);
       // Optionally, show a success message before redirecting
       router.push("/login?status=registered");

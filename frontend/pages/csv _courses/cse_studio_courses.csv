@@ -1,0 +1,110 @@
+name,code,credits,type,isMajor,forDeptAcronym
+Introduction to Computer Science,CSE101,3.0,THEORY,True,CSE
+Introduction to Computer Science Lab,CSE102,1.5,LAB,True,CSE
+Structured Programming Language,CSE103,3.0,THEORY,True,CSE
+Structured Programming Language Lab,CSE104,1.5,LAB,True,CSE
+Digital Logic Design,CSE105,3.0,THEORY,True,CSE
+Digital Logic Design Lab,CSE106,1.5,LAB,True,CSE
+Programming for Engineers I,CSE110,3.0,THEORY,False,EEE
+Programming for Engineers I Lab,CSE111,1.5,LAB,False,EEE
+Computer Applications for Business,CSE112,2.0,THEORY,False,BUS
+Computer Applications for Business Lab,CSE113,1.0,LAB,False,BUS
+Programming for Scientists,CSE114,3.0,THEORY,False,PHY
+Programming for Scientists Lab,CSE115,1.5,LAB,False,CHE
+Computational Methods for Civil Eng.,CSE116,2.0,THEORY,False,CEE
+Computational Methods for Civil Eng. Lab,CSE117,1.0,LAB,False,CEE
+Introduction to Computing for Architects,CSE118,2.0,THEORY,False,ARC
+Introduction to Computing for Architects Lab,CSE119,1.5,LAB,False,ARC
+Data Structures,CSE150,3.0,THEORY,True,CSE
+Data Structures Lab,CSE151,1.5,LAB,True,CSE
+Object Oriented Programming,CSE152,3.0,THEORY,True,CSE
+Object Oriented Programming Lab,CSE153,1.5,LAB,True,CSE
+Discrete Mathematics for CS,CSE154,3.0,THEORY,True,CSE
+Programming for Engineers II,CSE160,3.0,THEORY,False,MEE
+Programming for Engineers II Lab,CSE161,1.5,LAB,False,MEE
+Computer Aided Design,CSE162,2.0,THEORY,False,IPE
+Computer Aided Design Lab,CSE163,1.5,LAB,False,IPE
+Data Analysis for Social Science,CSE164,2.0,THEORY,False,SOC
+Data Analysis for Social Science Lab,CSE165,1.0,LAB,False,ANP
+Programming for Chemical Engineers,CSE166,2.0,THEORY,False,CEP
+Programming for Chemical Engineers Lab,CSE167,1.0,LAB,False,CEP
+IT Workshop,CSE170,1.5,LAB,True,CSE
+Algorithms,CSE201,3.0,THEORY,True,CSE
+Algorithms Lab,CSE202,1.5,LAB,True,CSE
+Computer Architecture and Organization,CSE203,3.0,THEORY,True,CSE
+Database Management Systems,CSE204,3.0,THEORY,True,CSE
+Database Management Systems Lab,CSE205,1.5,LAB,True,CSE
+Numerical Methods in Engineering,CSE210,3.0,THEORY,False,PME
+Numerical Methods in Engineering Lab,CSE211,1.5,LAB,False,PME
+Computational Statistics,CSE212,2.0,THEORY,False,STA
+Computational Statistics Lab,CSE213,1.0,LAB,False,STA
+Intro to Bioinformatics Programming,CSE214,2.0,THEORY,False,GEB
+Intro to Bioinformatics Programming Lab,CSE215,1.0,LAB,False,BMB
+Web Development for All,CSE216,2.0,THEORY,False,SWK
+Web Development for All Lab,CSE217,1.0,LAB,False,PSS
+Assembly Language Programming,CSE220,1.5,LAB,True,CSE
+Theory of Computation,CSE250,3.0,THEORY,True,CSE
+Operating Systems,CSE251,3.0,THEORY,True,CSE
+Operating Systems Lab,CSE252,1.5,LAB,True,CSE
+Software Engineering,CSE253,3.0,THEORY,True,CSE
+Software Engineering Lab,CSE254,1.5,LAB,True,CSE
+Microprocessors and Interfacing,CSE255,3.0,THEORY,True,CSE
+Microprocessors and Interfacing Lab,CSE256,1.5,LAB,True,CSE
+Database Systems for Management,CSE260,2.0,THEORY,False,BUS
+Database Systems for Management Lab,CSE261,1.0,LAB,False,BUS
+Digital Humanities Tools,CSE262,2.0,THEORY,False,ENG
+Digital Humanities Tools Lab,CSE263,1.0,LAB,False,BAN
+Data Visualization Techniques,CSE264,2.0,THEORY,False,ECO
+Data Visualization Techniques Lab,CSE265,1.0,LAB,False,PAD
+System Software,CSE270,2.0,THEORY,True,CSE
+Software Development Project I,CSE290,2.0,LAB,True,CSE
+Computer Networks,CSE301,3.0,THEORY,True,CSE
+Computer Networks Lab,CSE302,1.5,LAB,True,CSE
+Compiler Design,CSE303,3.0,THEORY,True,CSE
+Compiler Design Lab,CSE304,1.5,LAB,True,CSE
+Artificial Intelligence,CSE305,3.0,THEORY,True,CSE
+Artificial Intelligence Lab,CSE306,1.5,LAB,True,CSE
+Web Technologies,CSE307,3.0,THEORY,True,CSE
+Web Technologies Lab,CSE308,1.5,LAB,True,CSE
+Cryptography and Network Security,CSE310,3.0,THEORY,True,CSE
+Embedded Systems,CSE311,3.0,THEORY,True,CSE
+Embedded Systems Lab,CSE312,1.5,LAB,True,CSE
+Food Process Modeling & Simulation,CSE315,2.0,THEORY,False,FET
+Environmental Systems Modeling,CSE316,2.0,THEORY,False,FES
+Professional Communication & Ethics,CSE320,2.0,THEORY,True,CSE
+Machine Learning,CSE350,3.0,THEORY,True,CSE
+Machine Learning Lab,CSE351,1.5,LAB,True,CSE
+Data Mining and Warehousing,CSE352,3.0,THEORY,True,CSE
+Data Mining and Warehousing Lab,CSE353,1.5,LAB,True,CSE
+Human Computer Interaction,CSE354,3.0,THEORY,True,CSE
+Mobile Application Development,CSE355,3.0,THEORY,True,CSE
+Mobile Application Development Lab,CSE356,1.5,LAB,True,CSE
+Cloud Computing,CSE360,3.0,THEORY,True,CSE
+Cloud Computing Lab,CSE361,1.5,LAB,True,CSE
+Software Project Management,CSE370,3.0,THEORY,True,CSE
+Information Retrieval Systems,CSE371,3.0,THEORY,True,CSE
+Software Development Project II,CSE390,3.0,LAB,True,CSE
+Industrial Training,CSE395,1.5,LAB,True,CSE
+Distributed Systems,CSE401,3.0,THEORY,True,CSE
+Natural Language Processing,CSE402,3.0,THEORY,True,CSE
+Computer Vision,CSE403,3.0,THEORY,True,CSE
+Internet of Things (IoT),CSE404,3.0,THEORY,True,CSE
+Big Data Analytics,CSE405,3.0,THEORY,True,CSE
+Quantum Computing,CSE406,3.0,THEORY,True,CSE
+Ethical Hacking and Defense,CSE409,3.0,THEORY,True,CSE
+Ethical Hacking and Defense Lab,CSE410,1.5,LAB,True,CSE
+Deep Learning,CSE411,3.0,THEORY,True,CSE
+Deep Learning Lab,CSE412,1.5,LAB,True,CSE
+Final Year Project/Thesis - Part I,CSE440,3.0,LAB,True,CSE
+AI for Robotics,CSE450,3.0,THEORY,True,CSE
+AI for Robotics Lab,CSE451,1.5,LAB,True,CSE
+Game Development,CSE452,3.0,THEORY,True,CSE
+Game Development Lab,CSE453,1.5,LAB,True,CSE
+Blockchain Technologies,CSE454,3.0,THEORY,True,CSE
+Software Testing and Quality Assurance,CSE455,3.0,THEORY,True,CSE
+Software Testing and Quality Assurance Lab,CSE456,1.5,LAB,True,CSE
+Computer Graphics,CSE457,3.0,THEORY,True,CSE
+Computer Graphics Lab,CSE458,1.5,LAB,True,CSE
+Digital Image Processing,CSE459,3.0,THEORY,True,CSE
+Digital Image Processing Lab,CSE460,1.5,LAB,True,CSE
+Final Year Project/Thesis - Part II,CSE499,6.0,LAB,True,CSE

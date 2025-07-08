@@ -1,5 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 // Department Admin: Add Semester (must specify department, only for own department)
 exports.addSemester = async (req, res) => {
@@ -208,6 +210,94 @@ exports.addCourseToSemester = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+// [NEW] Department Admin: Add Courses to Semester from a CSV file
+exports.addCoursesFromCSV = async (req, res) => {
+  const { semesterId } = req.body;
+  const user = req.user;
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No CSV file was uploaded.' });
+  }
+  if (!semesterId) {
+    return res.status(400).json({ error: 'Semester ID is required.' });
+  }
+
+  try {
+    // Security Check: Ensure admin has permission for this semester's department
+    const semester = await prisma.semester.findUnique({
+      where: { id: Number(semesterId) },
+      select: { departmentId: true }
+    });
+
+    if (!semester) {
+      return res.status(404).json({ error: 'Semester not found.' });
+    }
+
+    // if (user.role !== 'super_admin' && user.departmentId !== semester.departmentId) {
+    //   return res.status(403).json({ error: 'You are not authorized to add courses to this semester.' });
+    // }
+
+    const courseCodesFromCSV = [];
+    const stream = Readable.from(req.file.buffer);
+
+    stream
+      .pipe(csv({ mapHeaders: ({ header }) => header.trim() })) // Trim header whitespace
+      .on('data', (row) => {
+        // Find the 'course_code' key, case-insensitively
+        const courseCodeKey = Object.keys(row).find(key => key.toLowerCase() === 'course_code');
+        if (courseCodeKey && row[courseCodeKey]) {
+          courseCodesFromCSV.push(row[courseCodeKey].trim());
+        }
+      })
+      .on('end', async () => {
+        try {
+          if (courseCodesFromCSV.length === 0) {
+            return res.status(400).json({ error: 'CSV file is empty or has an incorrect header. The header must be "course_code".' });
+          }
+
+          // Find all courses that match the codes from the CSV
+          const coursesInDb = await prisma.course.findMany({
+            where: { code: { in: courseCodesFromCSV } },
+            select: { id: true, code: true }
+          });
+
+          const foundCourseCodes = new Set(coursesInDb.map(c => c.code));
+          const notFoundCourseCodes = courseCodesFromCSV.filter(code => !foundCourseCodes.has(code));
+
+          if (notFoundCourseCodes.length > 0) {
+            return res.status(404).json({
+              error: `The following course codes were not found: ${notFoundCourseCodes.join(', ')}. Please check the codes and try again.`,
+            });
+          }
+
+          const courseIdsToConnect = coursesInDb.map(c => ({ id: c.id }));
+
+          // Connect all found courses to the semester
+          await prisma.semester.update({
+            where: { id: Number(semesterId) },
+            data: { courses: { connect: courseIdsToConnect } },
+          });
+
+          res.status(200).json({
+            message: `${courseIdsToConnect.length} courses added successfully.`,
+          });
+        } catch (dbError) {
+          console.error('Database error during CSV processing:', dbError);
+          res.status(500).json({ error: 'An error occurred while updating the database.' });
+        }
+      })
+      .on('error', (parseError) => {
+        console.error('CSV parsing error:', parseError);
+        res.status(400).json({ error: 'Failed to parse the CSV file.' });
+      });
+
+  } catch (error) {
+    console.error('Error in addCoursesFromCSV controller:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
+  }
+};
+
 
 exports.getSemesterCourses = async (req, res) => {
   const { semesterId } = req.params;

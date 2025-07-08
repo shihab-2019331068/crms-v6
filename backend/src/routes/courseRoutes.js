@@ -55,6 +55,16 @@ router.delete(
   courseController.deleteCourse
 );
 
+// --- START: ADDED ROUTE ---
+// Delete all courses for a department (Department Admin only)
+router.delete(
+    '/delete-all-courses',
+    authenticateToken,
+    authorizeRoles('department_admin', 'super_admin'),
+    courseController.deleteAllCourses
+);
+// --- END: ADDED ROUTE ---
+
 // Archive a course (Department Admin only)
 router.patch(
   '/archive-course',

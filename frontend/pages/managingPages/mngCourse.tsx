@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import api from "@/services/api";
 import { Department } from "@/components/departmentList";
@@ -223,6 +224,31 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
       setLoading(false);
     }
   };
+
+  // --- START: ADDED HANDLER ---
+  const handleDeleteAllCourses = async () => {
+    const deptId = departmentId ?? selectedDepartmentId;
+    if (!deptId) {
+      setError("No department selected.");
+      return;
+    }
+    setLoading(true);
+    resetMessages();
+    try {
+      const res = await api.delete("/delete-all-courses", {
+        data: { departmentId: deptId },
+        withCredentials: true,
+      });
+      setSuccess(res.data.message || "All active courses for the department have been deleted successfully!");
+      fetchCourses(); // Refetch to show the updated (likely empty) list
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      setError(apiErr.response?.data?.error ?? "Failed to delete all courses.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  // --- END: ADDED HANDLER ---
   
   const handleArchiveCourse = async (courseId: number) => {
     setLoading(true);
@@ -259,6 +285,7 @@ const ManageCoursesPage: React.FC<ManageCoursesProps> = ({ departmentId }) => {
                     courses={courses} departments={departments} departmentId={departmentId}
                     selectedDepartmentId={selectedDepartmentId} user={user} loading={loading}
                     handleDeleteCourse={handleDeleteCourse} handleArchiveCourse={handleArchiveCourse}
+                    handleDeleteAllCourses={handleDeleteAllCourses} // Pass new handler
                 />;
       case 'archived': return <ArchivedCoursesView departmentId={departmentId ?? selectedDepartmentId} />;
       case 'main':
@@ -381,11 +408,16 @@ const AddCourseView: React.FC<any> = ({
     );
 };
 
-const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, selectedDepartmentId, user, loading, handleDeleteCourse, handleArchiveCourse }) => {
+// --- START: MODIFIED COMPONENT ---
+const ManageCourseView: React.FC<any> = ({ 
+    courses, departments, departmentId, selectedDepartmentId, user, loading, 
+    handleDeleteCourse, handleArchiveCourse, handleDeleteAllCourses // Receive new prop
+}) => {
     const [courseFilter, setCourseFilter] = useState<'all' | 'major' | 'non-major' | 'offered'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+    const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false); // State for new dialog
     const itemsPerPage = 10;
 
     const filteredCourses = courses.filter((course: Course) => {
@@ -413,15 +445,32 @@ const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, s
         }
     };
     
+    const executeDeleteAll = () => {
+        handleDeleteAllCourses();
+        setIsDeleteAllDialogOpen(false); // Close dialog after initiating
+    };
+    
     return (
         <div>
             <h2 className="text-2xl font-bold mb-4">Manage Active Courses</h2>
-            <div className="flex gap-2 mb-4 flex-wrap border-b pb-4">
-                {(['all', 'major', 'non-major', 'offered'] as const).map(filter => (
-                     <Button key={filter} variant={courseFilter === filter ? 'default' : 'outline'} size="sm" onClick={() => { setCourseFilter(filter); setCurrentPage(1); }}>
-                        {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')} Courses
-                    </Button>
-                ))}
+            <div className="flex justify-between items-center gap-2 mb-4 flex-wrap border-b pb-4">
+                <div className="flex gap-2 flex-wrap">
+                    {(['all', 'major', 'non-major', 'offered'] as const).map(filter => (
+                         <Button key={filter} variant={courseFilter === filter ? 'default' : 'outline'} size="sm" onClick={() => { setCourseFilter(filter); setCurrentPage(1); }}>
+                            {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')} Courses
+                        </Button>
+                    ))}
+                </div>
+                <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => setIsDeleteAllDialogOpen(true)} 
+                    disabled={loading || courses.length === 0}
+                    className="text-gray-800 hover:underline border"
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove All Courses
+                </Button>
             </div>
 
             <div className="border rounded-lg">
@@ -505,9 +554,30 @@ const ManageCourseView: React.FC<any> = ({ courses, departments, departmentId, s
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* New AlertDialog for deleting all courses */}
+            <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete <strong>all active courses</strong> for the selected department. 
+                            Archived courses will not be affected. This action will also remove all teacher assignments for these courses.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeDeleteAll} className="bg-background text-gray-900 hover:bg-gray-100">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : 'Yes, delete all'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
+// --- END: MODIFIED COMPONENT ---
+
 
 const ArchivedCoursesView: React.FC<{ departmentId: number | null }> = ({ departmentId }) => {
     const [archivedCourses, setArchivedCourses] = useState<Course[]>([]);
