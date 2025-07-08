@@ -10,11 +10,7 @@ import ViewRoutine from './viewingPages/viewRoutine';
 
 const viewingPages = ['ViewRoutine'];
 
-interface ViewingPageProps {
-  sidebarOpen?: boolean
-}
-
-const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
+const ViewingPage = () => {
   const { user } = useAuth();
   const [activeForm, setActiveForm] = useState<string | null>(null);
   
@@ -69,14 +65,14 @@ const ViewingPage = ({ sidebarOpen = true }: ViewingPageProps) => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen p-6`}>
+      <div className="p-6">
         Loading Viewing Data...
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}>
+    <div className="p-6 page-bg-background text-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">
           Viewing Dashboard

@@ -19,53 +19,42 @@ export default function SuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="min-h-screen bg-background text-black flex flex-col">
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <div className="sticky top-10">
-          <SideBar
-            activeForm={activeForm}
-            setActiveForm={setActiveForm}
-            loading={loading}
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-            setError={setError}
-            setSuccess={setSuccess}
-          />
+    <div className="flex h-screen bg-background text-black">
+      {/* Sidebar */}
+      <SideBar
+        activeForm={activeForm}
+        setActiveForm={setActiveForm}
+        loading={loading}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        setError={setError}
+        setSuccess={setSuccess}
+      />
+
+      {/* Main Content will grow to fill the remaining space */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="w-full">
+          {error && activeForm && <div className="p-4 text-red-500 text-center">{error}</div>}
+          {success && activeForm && <div className="p-4 text-green-600 text-center">{success}</div>}
+          
+          {activeForm === "showSlidingPage" && (
+            <SlidingPage />
+          )}
+          {activeForm === "showManagingPage" && (
+            <ManagingPage />
+          )}
+          {/* Note: sidebarOpen prop is removed from these components as well */}
+          {activeForm === "showRooms" && (
+            <RoomList />
+          )}
+          {activeForm === "showUsers" && (
+            <UserList />
+          )}
+          {activeForm === "showLabs" && (
+            <LabList />
+          )}
         </div>
-        {/* Main Content */}
-        <div className="">
-          <div className="w-full">
-            {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
-            {success && activeForm && <div className="text-green-600 text-center">{success}</div>}
-            {activeForm === "showSlidingPage" && (
-              <div className="mt-6">
-                <SlidingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showManagingPage" && (
-              <div className="mt-6">
-                <ManagingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showRooms" && (
-              <div className="mt-6">
-                <RoomList sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showUsers" && (
-              <div className="mt-6">
-                <UserList sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showLabs" && (
-              <div className="mt-6">
-                <LabList sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

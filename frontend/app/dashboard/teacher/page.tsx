@@ -4,7 +4,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import SlidingPage from "@/pages/slidingPage";
 import ManagingPage from "@/pages/managingPage";
-import ViewingPage from "@/pages/viewingPageT";
+import ViewingPage from "@/pages/viewingPageT"; // This page uses viewingPageT
 import SideBar from "@/components/sideBar";
 import { useEffect } from "react";
 
@@ -16,43 +16,35 @@ export default function TeacherDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="min-h-screen bg-background text-black flex flex-col">
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <div className="sticky top-10">
-          <SideBar
-            activeForm={activeForm}
-            setActiveForm={setActiveForm}
-            loading={loading}
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-            setError={setError}
-            setSuccess={setSuccess}
-          />
+    <div className="flex h-screen bg-background text-black">
+      {/* Sidebar */}
+      <SideBar
+        activeForm={activeForm}
+        setActiveForm={setActiveForm}
+        loading={loading}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        setError={setError}
+        setSuccess={setSuccess}
+      />
+      
+      {/* Main Content will grow to fill the remaining space */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="w-full">
+          {error && activeForm && <div className="p-4 text-red-500 text-center">{error}</div>}
+          {success && activeForm && <div className="p-4 text-green-600 text-center">{success}</div>}
+          
+          {activeForm === "showSlidingPage" && (
+            <SlidingPage />
+          )}
+          {activeForm === "showManagingPage" && (
+            <ManagingPage />
+          )}
+          {activeForm === "showViewingPage" && (
+            <ViewingPage />
+          )}
         </div>
-        {/* Main Content */}
-        <div className="">
-          <div className="w-full">
-            {error && activeForm && <div className="text-red-500 text-center">{error}</div>}
-            {success && activeForm && <div className="text-green-600 text-center">{success}</div>}
-            {activeForm === "showSlidingPage" && (
-              <div className="mt-6">
-                <SlidingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showManagingPage" && (
-              <div className="mt-6">
-                <ManagingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-            {activeForm === "showViewingPage" && (
-              <div className="mt-6">
-                <ViewingPage sidebarOpen={sidebarOpen} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

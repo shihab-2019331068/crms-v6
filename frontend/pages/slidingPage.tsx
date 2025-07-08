@@ -1,5 +1,3 @@
-// --- START OF REVISED FILE slidingPage.tsx ---
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -20,16 +18,12 @@ interface UserDetails {
   mobile: string;
 }
 
-interface SlidingPageProps {
-  sidebarOpen?: boolean
-}
-
 // A simple skeleton component for loading states to improve UX.
 const SkeletonLoader = ({ className = 'w-3/4' }: { className?: string }) => (
   <div className={`h-4 bg-gray-300 rounded animate-pulse ${className}`}></div>
 );
 
-export default function SlidingPage({ sidebarOpen = true }: SlidingPageProps) {
+export default function SlidingPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
 
@@ -187,8 +181,7 @@ export default function SlidingPage({ sidebarOpen = true }: SlidingPageProps) {
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}
-    >
+    <div className="p-6 page-bg-background text-gray-800">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold h-7 w-48">
             {isLoading ? <SkeletonLoader className="w-full"/> : userDetails?.name}

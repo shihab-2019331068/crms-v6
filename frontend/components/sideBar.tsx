@@ -28,9 +28,9 @@ export default function SideBar({
 }: SideBarProps) {
   return (
     <aside
-      className={`flex-shrink-0 flex flex-col justify-between sidebar-light shadow p-2 sticky top-0 transition-all duration-300 ${
+      className={`flex-shrink-0 flex flex-col justify-between sidebar-light shadow p-2 sticky top-0 transition-all duration-300 h-screen ${
         sidebarOpen ? "w-64" : "w-16"
-      } h-[calc(100vh)]`}
+      }`}
     >
       {/* Top Section */}
       <div className="space-y-2 flex flex-col items-center">

@@ -19,11 +19,7 @@ import ManageRoutine from './managingPages/routinePages/mngRoutine';
 import ManageTeacher from './managingPages/mngTeacher';
 import ManageStudent from './managingPages/mngStudent';
 
-interface ManagingPageProps {
-  sidebarOpen?: boolean
-}
-
-const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
+const ManagingPage = () => {
   const { user } = useAuth();
   const [accesses, setAccesses] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -99,14 +95,14 @@ const ManagingPage = ({ sidebarOpen = true }: ManagingPageProps) => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen p-6`}>
+      <div className={`p-6`}>
         Loading Management Data...
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen p-6 page-bg-background transition-all duration-300 text-gray-800 ${ sidebarOpen ? "w-316" : "w-364" }`}>
+    <div className="p-6 page-bg-background text-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">
           Management Dashboard
