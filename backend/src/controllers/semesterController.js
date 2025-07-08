@@ -3,12 +3,12 @@ const prisma = new PrismaClient();
 
 // Department Admin: Add Semester (must specify department, only for own department)
 exports.addSemester = async (req, res) => {
-  const { name, session, departmentId } = req.body;
+  const { name, shortname, session, departmentId } = req.body;
   const user = req.user;
   try {
     // Validate required fields
-    if (!name || !session || !departmentId) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!name || !shortname || !session || !departmentId) {
+      return res.status(400).json({ error: 'Name, shortname, session, and departmentId are required.' });
     }
     // Fetch the admin's user record
     const admin = await prisma.user.findUnique({
@@ -24,12 +24,17 @@ exports.addSemester = async (req, res) => {
     const semester = await prisma.semester.create({
       data: {
         name,
+        shortname,
         session,
         departmentId
       },
     });
     res.status(201).json(semester);
   } catch (error) {
+    // Handle unique constraint violation (e.g., duplicate shortname in the same department)
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'A semester with this shortname already exists in this department.' });
+    }
     res.status(400).json({ error: error.message });
   }
 };

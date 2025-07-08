@@ -28,6 +28,15 @@ for (let year = 1; year <= 4; year++) {
   }
 }
 
+// Helper function to generate shortname from full semester name
+const generateShortnameFromName = (name: string): string => {
+  if (!name) return "";
+  const numbers = name.match(/\d+/g); // Finds all sequences of digits, e.g., "1st", "2nd" -> ["1", "2"]
+  if (numbers && numbers.length >= 2) {
+    return `${numbers[0]}-${numbers[1]}`;
+  }
+  return ""; // Return empty string if format is unexpected
+};
 
 interface SemesterCourse {
   id: number;
@@ -47,6 +56,7 @@ interface SemesterCourse {
 export interface Semester {
   id: number;
   name: string;
+  shortname: string;
   startDate: string;
   endDate: string;
   session: string;
@@ -69,6 +79,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
   
   // --- Add Semester State ---
   const [newSemesterName, setNewSemesterName] = useState("");
+  const [newSemesterShortname, setNewSemesterShortname] = useState(""); // Will be set programmatically
   const [newSemesterSession, setNewSemesterSession] = useState("");
   const [addSemesterLoading, setAddSemesterLoading] = useState(false);
   const [addSemesterError, setAddSemesterError] = useState("");
@@ -217,11 +228,13 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
     try {
       await api.post('/add-semester', {
         name: newSemesterName,
+        shortname: newSemesterShortname,
         session: newSemesterSession,
         departmentId: departmentId,
       }, { withCredentials: true });
       setAddSemesterSuccess("Semester added successfully!");
       setNewSemesterName("");
+      setNewSemesterShortname("");
       setNewSemesterSession("");
       fetchSemesters();
     } catch (err: any) {
@@ -385,7 +398,10 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
             <div>
               <label htmlFor="semesterName" className="block text-sm font-medium mb-1">Semester Name</label>
               <Select
-                onValueChange={(value) => setNewSemesterName(value)}
+                onValueChange={(value) => {
+                  setNewSemesterName(value);
+                  setNewSemesterShortname(generateShortnameFromName(value));
+                }}
                 value={newSemesterName}
               >
                 <SelectTrigger id="semesterName">
@@ -482,7 +498,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                 </Popover>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{semester.session || "No session set"}</p>
+              <p className="text-sm text-muted-foreground">{semester.shortname} | {semester.session || "No session set"}</p>
               {expandedCardId === semester.id && (
                 <div className="mt-4 pt-4 border-t space-y-4">
                   <div className="flex gap-2">
@@ -639,7 +655,7 @@ export default function MngSemester({ departmentId }: mngSemesterProps) {
                         </Popover>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground">{semester.session || "No session set"}</p>
+                        <p className="text-sm text-muted-foreground">{semester.shortname} | {semester.session || "No session set"}</p>
                     </CardContent>
                 </Card>
             ))}
