@@ -1,69 +1,53 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import api from "@/services/api";
 
-export default function Home() {
-  const [backendStatus, setBackendStatus] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
-
-  useEffect(() => {
-    api.get("/test")
-      .then(res => setBackendStatus(res.data?.message || "Connected"))
-      .catch(() => setBackendStatus("Not connected"));
-  }, []);
-
-  const checkBackend = () => {
-    setChecking(true);
-    setBackendStatus("Checking...");
-    // Set box color to gray by using a temporary status
-    setTimeout(() => {
-      api.get("/test")
-        .then(res => setBackendStatus(res.data?.message || "Connected"))
-        .catch(() => setBackendStatus("Not connected"))
-        .finally(() => setChecking(false));
-    }, 2000);
-  };
-
+// Changed component name from "Home" to "Page" to align with Next.js conventions.
+export default function Page() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6">
-      <h1 className="text-2xl font-bold">Welcome to SUST-CRMS website.</h1>
-      <div className="flex gap-4">
-        <Link href="/login" className="btn btn-primary">
-          Login
-        </Link>
-        <Link href="/register" className="btn btn-secondary">
-          Register
-        </Link>
-      </div>
-      <div className="mt-6 flex flex-col items-center gap-2">
-        <div
-          className={
-            "px-4 py-2 rounded text-white font-medium transition-colors duration-200 " +
-            (checking
-              ? "bg-gray-400"
-              : backendStatus === "Backend is connected!"
-              ? "bg-green-600"
-              : backendStatus === "Not connected"
-              ? "bg-red-600"
-              : "bg-gray-400")
-          }
-        >
-          <span className="text-sm">Backend status: </span>
-          <span>
-            {checking ? "Checking..." : backendStatus || "Checking..."}
-          </span>
+    // The main container is a full-screen hero section.
+    // It uses a dark, professional gradient background.
+    <main className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white overflow-hidden">
+      {/* A subtle background pattern for visual depth */}
+      <div
+        className="absolute inset-0 bg-grid-slate-800/[0.2]"
+        style={{
+          backgroundSize: "40px 40px",
+          backgroundImage:
+            "linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
+        }}
+      ></div>
+
+      {/* A radial gradient overlay to focus light on the center */}
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
+
+      {/* The z-10 class ensures this content appears on top of the background layers. */}
+      <div className="relative z-10 flex flex-col items-center text-center p-8 max-w-4xl">
+        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
+          SUST Central Routine Management System
+        </h1>
+        <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          Welcome to <span className="font-semibold">SUST-CRMS</span>, the centralized platform to manage, track, and
+          resolve campus-related issues efficiently. Join us in creating a more
+          responsive and connected university community.
+        </p>
+
+        {/* The Call to Action buttons are prominent and clear. */}
+        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+          <Link href="/register" className="btn btn-primary btn-lg px-8">
+            Get Started
+          </Link>
+          <Link href="/login" className="btn btn-secondary btn-outline btn-lg px-8">
+            Sign In
+          </Link>
         </div>
-        <button
-          className="btn btn-outline btn-sm mt-2 cursor-pointer"
-          onClick={checkBackend}
-          disabled={checking}
-          style={{ cursor: checking ? 'not-allowed' : 'pointer' }}
-        >
-          {checking ? "Checking..." : "Check Connection"}
-        </button>
       </div>
-    </div>
+
+      {/* A simple footer to add a professional touch */}
+      <footer className="absolute bottom-4 text-gray-500 text-sm z-10">
+        © {new Date().getFullYear()} SUST-CRMS. All Rights Reserved.
+      </footer>
+    </main>
   );
 }

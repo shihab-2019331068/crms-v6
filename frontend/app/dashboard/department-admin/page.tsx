@@ -5,6 +5,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import DepartmentList from "@/components/departmentList";
 import SlidingPage from "@/pages/slidingPage";
 import ManagingPage from "@/pages/managingPage";
+import ViewingPage from "@/pages/viewingPageDA";
 import SideBar from "@/components/sideBar";
 import { useEffect } from "react";
 
@@ -40,6 +41,9 @@ export default function DepartmentAdminDashboard() {
           )}
           {activeForm === "showManagingPage" && (
             <ManagingPage />
+          )}
+          {activeForm === "showViewingPage" && (
+            <ViewingPage />
           )}
         </div>
       </main>
