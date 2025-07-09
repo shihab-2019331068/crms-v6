@@ -75,18 +75,15 @@ export const GenerateRoutineView: React.FC<GenerateRoutineViewProps> = ({ depart
   
   const handleNonMajorSlotToggle = (day: string, time: string) => {
     setNonMajorSlots(prev => {
-        const newSlots = { ...prev };
-        if (!newSlots[day]) {
-            newSlots[day] = [];
-        }
-        const daySlots = newSlots[day];
-        const index = daySlots.indexOf(time);
-        if (index > -1) {
-            daySlots.splice(index, 1);
-        } else {
-            daySlots.push(time);
-        }
-        return newSlots;
+      const currentDaySlots = prev[day] || [];
+      const newDaySlots = currentDaySlots.includes(time)
+        ? currentDaySlots.filter(t => t !== time)
+        : [...currentDaySlots, time];
+
+      return {
+        ...prev,
+        [day]: newDaySlots,
+      };
     });
   };
 
@@ -219,7 +216,7 @@ export const GenerateRoutineView: React.FC<GenerateRoutineViewProps> = ({ depart
                             <div key={`${day}-${time}`} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`${day}-${time}`}
-                                checked={nonMajorSlots[day]?.includes(time) || false}
+                                checked={nonMajorSlots[day.toUpperCase()]?.includes(time) || false}
                                 onCheckedChange={() => handleNonMajorSlotToggle(day.toUpperCase(), time)}
                               />
                               <Label htmlFor={`${day}-${time}`} className="text-sm font-normal cursor-pointer">
