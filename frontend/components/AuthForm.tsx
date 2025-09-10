@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { UseFormReturn, FieldErrors } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { LoginSchemaType } from "@/app/login/page"; // Assuming login is in app/(auth)/login
 import { RegisterSchemaType } from "@/app/register/page"; // Assuming register is in app/(auth)/register
 
@@ -88,10 +88,10 @@ export default function AuthForm(props: AuthFormProps) {
             </>
           ) : (
             <>
-              {/* Or{' '}
+              Or{' '}
               <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
                 create a new account
-              </Link> */}
+              </Link>
             </>
           )}
         </p>
